@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os
+import os, getpass
 import numpy as np
 
 import pydoop.hdfs as hdfs
@@ -10,6 +10,7 @@ import pydoop.utils as utils
 N_ARRAYS = 4
 SHAPE = (4, 5)
 PYDOOP_EXE = os.path.join(os.path.expanduser('~'), '.local', 'bin', 'pydoop')
+USER = getpass.getuser()
 
 
 def main():
@@ -18,13 +19,19 @@ def main():
         ]
     print 'Image input dir:', in_dir
     print 'MapReduce input file:', mr_in
-    with hdfs.open(mr_in, 'w') as mrf:
+    with hdfs.open(mr_in, 'w', user=USER) as mrf:
         for i in xrange(N_ARRAYS):
             path = hdfs.path.join(in_dir, 'a%d.npy' % (i+1))
-            with hdfs.open(path, 'w') as fo:
+            with hdfs.open(path, 'w', user=USER) as fo:
                 np.save(fo, np.random.random(SHAPE))
                 mrf.write('%s\n' % fo.name)
-    opts = '--num-reducers=0 -D mapred.map.tasks=2 -D out.dir=%s' % out_dir
+    d_opts_map = {
+        'mapred.map.tasks': 2,
+        'out.dir': out_dir,
+        'hdfs.user': USER,
+        }
+    d_opts = ' '.join('-D %s=%s' % (k, v) for k, v in d_opts_map.iteritems())
+    opts = '--num-reducers=0 %s' % d_opts
     cmd = '%s script %s features.py %s %s' % (PYDOOP_EXE, opts, mr_in, mr_out)
     print 'Running %r' % (cmd,)
     os.system(cmd)
