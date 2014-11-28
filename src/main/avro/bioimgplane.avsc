@@ -1,0 +1,32 @@
+{
+  "namespace": "it.crs4.features",
+  "type": "record",
+  "name": "BioImgPlane",
+  "fields": [
+    {"name": "name", "type": "string"},
+    {"name": "index", "type": "int"},
+    {"name": "offset_x", "type": "int"},
+    {"name": "offset_y", "type": "int"},
+    {"name": "size_x", "type": "int"},
+    {"name": "size_y", "type": "int"},
+    {"name": "data", "type": "bytes"},
+    {
+      "name": "pixel_type", "type": {
+        "namespace": "it.crs4.features",
+        "type": "enum",
+        "name": "PixelTypes",
+        "doc": "Data types used to store pixel values",
+        "symbols": [
+          "INT8",
+          "UINT8",
+          "INT16",
+          "UINT16",
+          "INT32",
+          "UINT32",
+          "FLOAT",
+          "DOUBLE"
+        ]
+      }
+    }
+  ]
+}
