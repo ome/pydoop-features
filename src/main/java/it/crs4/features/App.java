@@ -9,8 +9,13 @@ import loci.formats.FormatTools;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.file.DataFileWriter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class App {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
 
   private static PixelTypes[] ptValues = PixelTypes.values();
 
@@ -45,7 +50,11 @@ public class App {
       DataFileWriter<BioImgPlane> writer = new DataFileWriter<BioImgPlane>(
         new SpecificDatumWriter<BioImgPlane>(BioImgPlane.class)
       );
-      for (int i = 0; i < reader.getImageCount(); i++) {
+      int nPlanes = reader.getImageCount();
+      LOGGER.info("Reading from {}", fn);
+      LOGGER.info("Writing to {}", outFn);
+      for (int i = 0; i < nPlanes; i++) {
+        LOGGER.debug("Plane {}/{}", i + 1, nPlanes);
         BioImgPlane plane = new BioImgPlane();
         plane.setName(bn);
         plane.setIndex(i);
@@ -63,6 +72,7 @@ public class App {
       }
       writer.close();
       reader.close();
+      LOGGER.info("All done");
     } catch (Exception e) {
       System.err.println("ERROR: " + e.getMessage());
       return;

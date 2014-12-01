@@ -5,4 +5,7 @@ if [ "$#" == 0 ]; then
     exit 2
 fi
 
+BASEDIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd; cd - >/dev/null)
+pushd ${BASEDIR}/..
 mvn exec:java -Dexec.mainClass="it.crs4.features.App" -Dexec.args="$@"
+popd
