@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+
+import sys
+import os
+import argparse
+
+from avro.datafile import DataFileReader
+from avro.io import DatumReader
+
+
+BASEDIR = os.path.dirname(os.path.abspath(__file__))
+AVRODIR = os.path.join(BASEDIR, os.path.pardir, 'src', 'main', 'avro')
+SCHEMA_FN = os.path.join(AVRODIR, 'bioimgplane.avsc')
+
+
+def make_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('img_file', metavar='IMG_FILE')
+    parser.add_argument('-s', '--schema', metavar='FILE', default=SCHEMA_FN,
+                        help='avro schema file')
+    return parser
+
+
+# no schema needed for deserialization
+def iterplanes(img_file):
+    with open(img_file, 'rb') as f:
+        reader = DataFileReader(f, DatumReader())
+        for plane in reader:
+            yield plane
+
+
+def main(argv):
+    parser = make_parser()
+    args = parser.parse_args(argv)
+    for p in iterplanes(args.img_file):
+        print '%s[%d] (%d x %d), %s' % (
+            p['name'], p['index'], p['size_x'], p['size_y'], p['pixel_type'],
+        )
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
