@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ "$#" == 0 ]; then
+    echo "USAGE: ./$(basename $0) IMG_FILE"
+    exit 2
+fi
+
+mvn exec:java -Dexec.mainClass="it.crs4.features.App" -Dexec.args="$@"

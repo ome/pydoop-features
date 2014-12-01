@@ -39,7 +39,7 @@ public class App {
       assert seriesCount == 1;
       assert !reader.isRGB();
       reader.setSeries(0);
-      int pixelType = reader.getPixelType();  // FIXME: convert to avro enum
+      int pixelType = reader.getPixelType();
       int sizeX = reader.getSizeX();
       int sizeY = reader.getSizeY();
       DataFileWriter<BioImgPlane> writer = new DataFileWriter<BioImgPlane>(
