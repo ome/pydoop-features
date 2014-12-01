@@ -41,8 +41,12 @@ public class App {
       ImageReader reader = new ImageReader();
       reader.setId(fn);
       int seriesCount = reader.getSeriesCount();
-      assert seriesCount == 1;
-      assert !reader.isRGB();
+      if (seriesCount != 1) {
+        throw new RuntimeException("Multi-series img not supported");
+      }
+      if (reader.isRGB()) {
+        throw new RuntimeException("RGB img not supported");
+      }
       reader.setSeries(0);
       int pixelType = reader.getPixelType();
       int sizeX = reader.getSizeX();
