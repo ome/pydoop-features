@@ -18,10 +18,26 @@ public class App {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
 
-  private static PixelTypes[] ptValues = PixelTypes.values();
-
-  private static PixelTypes convertPT(int t) {
-    return ptValues[t];
+  private static PixelTypes convertPT(int pixelType) {
+    switch (pixelType) {
+      case FormatTools.INT8:
+        return PixelTypes.INT8;
+      case FormatTools.UINT8:
+        return PixelTypes.UINT8;
+      case FormatTools.INT16:
+        return PixelTypes.INT16;
+      case FormatTools.UINT16:
+        return PixelTypes.UINT16;
+      case FormatTools.INT32:
+        return PixelTypes.INT32;
+      case FormatTools.UINT32:
+        return PixelTypes.UINT32;
+      case FormatTools.FLOAT:
+        return PixelTypes.FLOAT32;
+      case FormatTools.DOUBLE:
+        return PixelTypes.FLOAT64;
+    }
+    throw new IllegalArgumentException("Unknown pixel type: " + pixelType);
   }
 
   private static String basename(String path) {

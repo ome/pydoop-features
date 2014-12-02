@@ -6,6 +6,7 @@ import argparse
 
 from avro.datafile import DataFileReader
 from avro.io import DatumReader
+import numpy as np
 
 
 BASEDIR = os.path.dirname(os.path.abspath(__file__))
@@ -29,13 +30,25 @@ def iterplanes(img_file):
             yield plane
 
 
+# FIXME: add endianness info to avro record
+def build_array(plane):
+    dtype = getattr(np, plane['pixel_type'].lower())
+    a = np.fromstring(plane['data'], dtype=dtype)
+    return a.reshape(plane['size_x'], plane['size_y'])
+
+
 def main(argv):
     parser = make_parser()
     args = parser.parse_args(argv)
     for p in iterplanes(args.img_file):
-        print '%s[%d] (%d x %d), %s' % (
-            p['name'], p['index'], p['size_x'], p['size_y'], p['pixel_type'],
+        print '%s[%d] [%d, %d, %d]' % (
+            p['name'], p['index'], p['index_z'], p['index_c'], p['index_t'],
         )
+        a = build_array(p)
+        out_fn = '%s-z%04d-c%04d-t%04d.npy' % (
+            p['name'], p['index_z'], p['index_c'], p['index_t']
+        )
+        np.save(out_fn, a)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+
+import numpy as np
+
+N_BYTES = {
+    "INT8": 1,
+    "UINT8": 1,
+    "INT16": 2,
+    "UINT16": 2,
+    "INT32": 4,
+    "UINT32": 4,
+    "FLOAT32": 4,
+    "FLOAT64": 8,
+}
+
+for symbol, nb in N_BYTES.iteritems():
+    attr = symbol.lower()
+    assert hasattr(np, attr)
+    assert getattr(np, attr)().nbytes == nb
