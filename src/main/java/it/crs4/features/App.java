@@ -2,6 +2,7 @@ package it.crs4.features;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 import loci.formats.ImageReader;
 import loci.formats.FormatTools;
@@ -58,10 +59,14 @@ public class App {
       LOGGER.info("Reading from {}", fn);
       LOGGER.info("Writing to {}", outFn);
       for (int i = 0; i < nPlanes; i++) {
-        LOGGER.debug("Plane {}/{}", i + 1, nPlanes);
+        int[] zct = reader.getZCTCoords(i);
+        LOGGER.debug("Plane {}/{} {}", i + 1, nPlanes, Arrays.toString(zct));
         BioImgPlane plane = new BioImgPlane();
         plane.setName(bn);
         plane.setIndex(i);
+        plane.setIndexZ(zct[0]);
+        plane.setIndexC(zct[1]);
+        plane.setIndexT(zct[2]);
         plane.setOffsetX(0);  // FIXME
         plane.setOffsetY(0);  // FIXME
         plane.setSizeX(sizeX);

@@ -5,6 +5,9 @@
   "fields": [
     {"name": "name", "type": "string"},
     {"name": "index", "type": "int"},
+    {"name": "index_z", "type": "int"},
+    {"name": "index_c", "type": "int"},
+    {"name": "index_t", "type": "int"},
     {"name": "offset_x", "type": "int"},
     {"name": "offset_y", "type": "int"},
     {"name": "size_x", "type": "int"},
