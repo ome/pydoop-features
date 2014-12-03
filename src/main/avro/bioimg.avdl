@@ -1,0 +1,23 @@
+@namespace("it.crs4.features")
+protocol BioImg {
+
+  /** Data types used to store pixel values */
+  enum PixelTypes {
+    INT8, UINT8, INT16, UINT16, INT32, UINT32, FLOAT32, FLOAT64
+  }
+
+  record BioImgPlane {
+    string name;
+    int index;
+    int index_z;
+    int index_c;
+    int index_t;
+    int offset_x;
+    int offset_y;
+    int size_x;
+    int size_y;
+    bytes data;
+    PixelTypes pixel_type;
+  }
+
+}
