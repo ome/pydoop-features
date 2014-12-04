@@ -1,8 +1,12 @@
 package it.crs4.features;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 
 import loci.formats.ImageReader;
 import loci.formats.FormatTools;
@@ -18,24 +22,24 @@ public class App {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
 
-  private static PixelTypes convertPT(int pixelType) {
+  private static DType convertPT(int pixelType) {
     switch (pixelType) {
       case FormatTools.INT8:
-        return PixelTypes.INT8;
+        return DType.INT8;
       case FormatTools.UINT8:
-        return PixelTypes.UINT8;
+        return DType.UINT8;
       case FormatTools.INT16:
-        return PixelTypes.INT16;
+        return DType.INT16;
       case FormatTools.UINT16:
-        return PixelTypes.UINT16;
+        return DType.UINT16;
       case FormatTools.INT32:
-        return PixelTypes.INT32;
+        return DType.INT32;
       case FormatTools.UINT32:
-        return PixelTypes.UINT32;
+        return DType.UINT32;
       case FormatTools.FLOAT:
-        return PixelTypes.FLOAT32;
+        return DType.FLOAT32;
       case FormatTools.DOUBLE:
-        return PixelTypes.FLOAT64;
+        return DType.FLOAT64;
     }
     throw new IllegalArgumentException("Unknown pixel type: " + pixelType);
   }
@@ -45,7 +49,21 @@ public class App {
     return (i < 0) ? path : path.substring(i + 1);
   }
 
-  public static void main(String[] args) {
+  private static ArrayList<Integer> getShape(ImageReader reader)
+    throws NoSuchMethodException,
+           IllegalAccessException,
+           InvocationTargetException {
+    String dimOrder = reader.getDimensionOrder();
+    ArrayList<Integer> shape = new ArrayList<Integer>();
+    for (int i = 0; i < dimOrder.length(); i++) {
+      String getterName = "getSize" + dimOrder.charAt(i);
+      Method method = reader.getClass().getMethod(getterName);
+      shape.add((Integer) method.invoke(reader));
+    }
+    return shape;
+  }
+
+  public static void main(String[] args) throws Exception {
     if (args.length == 0) {
       System.err.println("Usage: java App IMG_FILE");
       return;
@@ -53,55 +71,56 @@ public class App {
     String fn = args[0];
     String bn = basename(fn);
     String outFn = bn + ".avro";
+    int offsetX = 0;  // FIXME
+    int offsetY = 0;  // FIXME
 
-    try {
-      ImageReader reader = new ImageReader();
-      reader.setId(fn);
-      int seriesCount = reader.getSeriesCount();
-      if (seriesCount != 1) {
-        throw new RuntimeException("Multi-series img not supported");
-      }
-      if (reader.isRGB()) {
-        throw new RuntimeException("RGB img not supported");
-      }
-      reader.setSeries(0);
-      int pixelType = reader.getPixelType();
-      int sizeX = reader.getSizeX();
-      int sizeY = reader.getSizeY();
-      DataFileWriter<BioImgPlane> writer = new DataFileWriter<BioImgPlane>(
-        new SpecificDatumWriter<BioImgPlane>(BioImgPlane.class)
-      );
-      int nPlanes = reader.getImageCount();
-      LOGGER.info("Reading from {}", fn);
-      LOGGER.info("Writing to {}", outFn);
-      for (int i = 0; i < nPlanes; i++) {
-        int[] zct = reader.getZCTCoords(i);
-        LOGGER.debug("Plane {}/{} {}", i + 1, nPlanes, Arrays.toString(zct));
-        BioImgPlane plane = new BioImgPlane();
-        plane.setName(bn);
-        plane.setIndex(i);
-        plane.setIndexZ(zct[0]);
-        plane.setIndexC(zct[1]);
-        plane.setIndexT(zct[2]);
-        plane.setOffsetX(0);  // FIXME
-        plane.setOffsetY(0);  // FIXME
-        plane.setSizeX(sizeX);
-        plane.setSizeY(sizeY);
-        plane.setData(ByteBuffer.wrap(reader.openBytes(i)));
-        plane.setPixelType(convertPT(pixelType));
-        //--
-        if (i == 0) {
-          writer.create(plane.getSchema(), new File(outFn));
-        }
-        writer.append(plane);
-      }
-      writer.close();
-      reader.close();
-      LOGGER.info("All done");
-    } catch (Exception e) {
-      System.err.println("ERROR: " + e.getMessage());
-      return;
+    ImageReader reader = new ImageReader();
+    reader.setId(fn);
+    int seriesCount = reader.getSeriesCount();
+    if (seriesCount != 1) {
+      throw new RuntimeException("Multi-series img not supported");
     }
+    if (reader.isRGB()) {
+      throw new RuntimeException("RGB img not supported");
+    }
+    if (reader.isInterleaved()) {
+      throw new RuntimeException("Interleaving not supported");
+    }
+    reader.setSeries(0);
+    ArrayList<Integer> shape = getShape(reader);
+    DataFileWriter<BioImgPlane> writer = new DataFileWriter<BioImgPlane>(
+      new SpecificDatumWriter<BioImgPlane>(BioImgPlane.class)
+    );
+    int nPlanes = reader.getImageCount();
+    LOGGER.info("Reading from {}", fn);
+    LOGGER.info("Writing to {}", outFn);
+    for (int i = 0; i < nPlanes; i++) {
+      int[] zct = reader.getZCTCoords(i);
+      LOGGER.debug("Plane {}/{} {}", i + 1, nPlanes, Arrays.toString(zct));
+      String dimOrder = reader.getDimensionOrder();
+      Integer[] offsets = new Integer[dimOrder.length()];
+      offsets[dimOrder.indexOf('X')] = offsetX;
+      offsets[dimOrder.indexOf('Y')] = offsetY;
+      offsets[dimOrder.indexOf('Z')] = zct[0];
+      offsets[dimOrder.indexOf('C')] = zct[1];
+      offsets[dimOrder.indexOf('T')] = zct[2];
+      //--
+      MultiArray a = new MultiArray();
+      a.setDtype(convertPT(reader.getPixelType()));
+      a.setLittleEndian(reader.isLittleEndian());
+      a.setShape(shape);
+      a.setOffsets(Arrays.asList(offsets));
+      a.setData(ByteBuffer.wrap(reader.openBytes(i)));
+      BioImgPlane plane = new BioImgPlane(bn, dimOrder, a);
+      //--
+      if (i == 0) {
+        writer.create(plane.getSchema(), new File(outFn));
+      }
+      writer.append(plane);
+    }
+    writer.close();
+    reader.close();
+    LOGGER.info("All done");
   }
 
 }

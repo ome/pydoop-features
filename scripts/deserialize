@@ -9,16 +9,9 @@ from avro.io import DatumReader
 import numpy as np
 
 
-BASEDIR = os.path.dirname(os.path.abspath(__file__))
-AVRODIR = os.path.join(BASEDIR, os.path.pardir, 'src', 'main', 'avro')
-SCHEMA_FN = os.path.join(AVRODIR, 'bioimgplane.avsc')
-
-
 def make_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('img_file', metavar='IMG_FILE')
-    parser.add_argument('-s', '--schema', metavar='FILE', default=SCHEMA_FN,
-                        help='avro schema file')
     return parser
 
 
@@ -30,24 +23,25 @@ def iterplanes(img_file):
             yield plane
 
 
-# FIXME: add endianness info to avro record
-def build_array(plane):
-    dtype = getattr(np, plane['pixel_type'].lower())
-    a = np.fromstring(plane['data'], dtype=dtype)
-    return a.reshape(plane['size_x'], plane['size_y'])
+def build_array(multiarray, x_idx, y_idx):
+    if not multiarray['little_endian']:
+        raise RuntimeError('big endian data not supported (yet)')
+    dtype = getattr(np, multiarray['dtype'].lower())
+    a = np.fromstring(multiarray['data'], dtype=dtype)
+    return a.reshape(multiarray['shape'][x_idx], multiarray['shape'][y_idx])
 
 
 def main(argv):
     parser = make_parser()
     args = parser.parse_args(argv)
     for p in iterplanes(args.img_file):
-        print '%s[%d] [%d, %d, %d]' % (
-            p['name'], p['index'], p['index_z'], p['index_c'], p['index_t'],
-        )
-        a = build_array(p)
-        out_fn = '%s-z%04d-c%04d-t%04d.npy' % (
-            p['name'], p['index_z'], p['index_c'], p['index_t']
-        )
+        do = p['dimension_order']
+        offsets = p['pixel_data']['offsets']
+        idx_map = dict((dim, i) for (i, dim) in enumerate(do))
+        x, y, z, c, t = [offsets[idx_map[_]] for _ in 'XYZCT']
+        print '%s {x=%d, y=%d, z=%d, c=%d, t=%d}' % (p['name'], x, y, z, c, t)
+        a = build_array(p['pixel_data'], idx_map['X'], idx_map['Y'])
+        out_fn = '%s-z%04d-c%04d-t%04d.npy' % (p['name'], z, c, t)
         np.save(out_fn, a)
 
 

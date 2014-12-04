@@ -1,0 +1,21 @@
+@namespace("it.crs4.features")
+protocol DataBlock {
+
+  /** Element data type */
+  enum DType {
+    INT8, UINT8, INT16, UINT16, INT32, UINT32, FLOAT32, FLOAT64
+  }
+
+  record MultiArray {
+    DType dtype;
+    boolean little_endian = true;
+    array<int> shape;
+    array<int> offsets;
+    bytes data;
+  }
+
+}
+
+// Local Variables:
+// mode: java
+// End:
