@@ -6,7 +6,7 @@ protocol BioImg {
   record BioImgPlane {
     string name;
     string dimension_order;
-    MultiArray pixel_data;
+    ArraySlice pixel_data;
   }
 
 }

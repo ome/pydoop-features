@@ -71,8 +71,6 @@ public class App {
     String fn = args[0];
     String bn = basename(fn);
     String outFn = bn + ".avro";
-    int offsetX = 0;  // FIXME
-    int offsetY = 0;  // FIXME
 
     ImageReader reader = new ImageReader();
     reader.setId(fn);
@@ -87,6 +85,12 @@ public class App {
       throw new RuntimeException("Interleaving not supported");
     }
     reader.setSeries(0);
+    //-- FIXME: add support for XY slicing --
+    int offsetX = 0;
+    int offsetY = 0;
+    int deltaX = reader.getSizeX();
+    int deltaY = reader.getSizeY();
+    //---------------------------------------
     ArrayList<Integer> shape = getShape(reader);
     DataFileWriter<BioImgPlane> writer = new DataFileWriter<BioImgPlane>(
       new SpecificDatumWriter<BioImgPlane>(BioImgPlane.class)
@@ -98,18 +102,31 @@ public class App {
       int[] zct = reader.getZCTCoords(i);
       LOGGER.debug("Plane {}/{} {}", i + 1, nPlanes, Arrays.toString(zct));
       String dimOrder = reader.getDimensionOrder();
-      Integer[] offsets = new Integer[dimOrder.length()];
-      offsets[dimOrder.indexOf('X')] = offsetX;
-      offsets[dimOrder.indexOf('Y')] = offsetY;
-      offsets[dimOrder.indexOf('Z')] = zct[0];
-      offsets[dimOrder.indexOf('C')] = zct[1];
-      offsets[dimOrder.indexOf('T')] = zct[2];
+      int nDim = dimOrder.length();
+      int iX = dimOrder.indexOf('X');
+      int iY = dimOrder.indexOf('Y');
+      int iZ = dimOrder.indexOf('Z');
+      int iC = dimOrder.indexOf('C');
+      int iT = dimOrder.indexOf('T');
+      Integer[] offsets = new Integer[nDim];
+      offsets[iX] = offsetX;
+      offsets[iY] = offsetY;
+      offsets[iZ] = zct[0];
+      offsets[iC] = zct[1];
+      offsets[iT] = zct[2];
+      Integer[] deltas = new Integer[nDim];
+      deltas[iX] = deltaX;
+      deltas[iY] = deltaY;
+      deltas[iZ] = 1;
+      deltas[iC] = 1;
+      deltas[iT] = 1;
       //--
-      MultiArray a = new MultiArray();
+      ArraySlice a = new ArraySlice();
       a.setDtype(convertPT(reader.getPixelType()));
       a.setLittleEndian(reader.isLittleEndian());
       a.setShape(shape);
       a.setOffsets(Arrays.asList(offsets));
+      a.setDeltas(Arrays.asList(deltas));
       a.setData(ByteBuffer.wrap(reader.openBytes(i)));
       BioImgPlane plane = new BioImgPlane(bn, dimOrder, a);
       //--

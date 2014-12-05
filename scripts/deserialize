@@ -1,12 +1,85 @@
 #!/usr/bin/env python
 
 import sys
-import os
 import argparse
+import itertools
+import operator
 
 from avro.datafile import DataFileReader
 from avro.io import DatumReader
 import numpy as np
+
+
+class ArraySlice(object):
+
+    def __init__(self, avro_record):
+        r = avro_record
+        if not r['little_endian']:
+            raise RuntimeError('big endian data not supported (yet)')
+        self.shape = r['shape']
+        self.offsets = r['offsets']
+        self.deltas = r['deltas']
+        self.__check_boundaries()
+        dtype = getattr(np, r['dtype'].lower())
+        self.__check_size(r['data'], dtype)
+        self.data = np.fromstring(r['data'], dtype=dtype).reshape(r['deltas'])
+
+    def __check_boundaries(self):
+        n_dim = len(self.shape)
+        if not (len(self.offsets) == len(self.deltas) == n_dim):
+            raise ValueError('shape/offsets/deltas must have the same length')
+        for s, o, d in itertools.izip(self.shape, self.offsets, self.deltas):
+            if not (0 <= o <= o + d <= s):
+                raise ValueError(
+                    '0 <= %d <= %d + %d <= %d is false' % (o, o + d, s)
+                )
+
+    def __check_size(self, data, dtype):
+        n_elements = reduce(operator.mul, self.deltas)
+        expected_size = n_elements * dtype().nbytes
+        if len(data) != expected_size:
+            raise ValueError(
+                'unexpected data size (%d != %d)' % (len(data), expected_size)
+            )
+
+
+class BioImgPlane(object):
+
+    BASE_DIM_ORDER = 'XYZCT'
+
+    def __init__(self, avro_record):
+        r = avro_record
+        self.name = r['name']
+        self.dimension_order = r['dimension_order']
+        self.__check_dim_order()
+        self.indices = [
+            self.dimension_order.index(_) for _ in self.BASE_DIM_ORDER
+        ]  # FIXME: optimize this
+        self.i_x, self.i_y, self.i_z, self.i_c, self.i_t = self.indices
+        self.pixel_data = ArraySlice(r['pixel_data'])
+        self.__check_is_plane()
+        self.z = self.pixel_data.offsets[self.i_z]
+        self.c = self.pixel_data.offsets[self.i_c]
+        self.t = self.pixel_data.offsets[self.i_t]
+
+    def __check_dim_order(self):
+        if (len(self.dimension_order) != len(self.BASE_DIM_ORDER) or
+            set(self.dimension_order) != set(self.BASE_DIM_ORDER)):
+            raise ValueError('dimension order must be a permutation of %r' %
+                             self.BASE_DIM_ORDER)
+
+    def __check_is_plane(self):
+        dz, dt, dc = [self.pixel_data.deltas[_] for _ in self.indices[2:]]
+        if not(dz == dt == dc == 1):
+            raise ValueError('data is not flat along the zct dimensions')
+
+    def get_xy(self):
+        idx = [None] * len(self.dimension_order)
+        for i in self.indices[2:]:
+            idx[i] = 0
+        idx[self.i_x] = slice(0, self.pixel_data.shape[self.i_x])
+        idx[self.i_y] = slice(0, self.pixel_data.shape[self.i_y])
+        return self.pixel_data.data[tuple(idx)]
 
 
 def make_parser():
@@ -19,30 +92,19 @@ def make_parser():
 def iterplanes(img_file):
     with open(img_file, 'rb') as f:
         reader = DataFileReader(f, DatumReader())
-        for plane in reader:
-            yield plane
-
-
-def build_array(multiarray, x_idx, y_idx):
-    if not multiarray['little_endian']:
-        raise RuntimeError('big endian data not supported (yet)')
-    dtype = getattr(np, multiarray['dtype'].lower())
-    a = np.fromstring(multiarray['data'], dtype=dtype)
-    return a.reshape(multiarray['shape'][x_idx], multiarray['shape'][y_idx])
+        for r in reader:
+            yield BioImgPlane(r)
 
 
 def main(argv):
     parser = make_parser()
     args = parser.parse_args(argv)
     for p in iterplanes(args.img_file):
-        do = p['dimension_order']
-        offsets = p['pixel_data']['offsets']
-        idx_map = dict((dim, i) for (i, dim) in enumerate(do))
-        x, y, z, c, t = [offsets[idx_map[_]] for _ in 'XYZCT']
-        print '%s {x=%d, y=%d, z=%d, c=%d, t=%d}' % (p['name'], x, y, z, c, t)
-        a = build_array(p['pixel_data'], idx_map['X'], idx_map['Y'])
-        out_fn = '%s-z%04d-c%04d-t%04d.npy' % (p['name'], z, c, t)
-        np.save(out_fn, a)
+        pixels = p.get_xy()
+        print p.name, p.dimension_order, pixels.shape
+        print pixels[:2, :2]
+        out_fn = '%s-z%04d-c%04d-t%04d.npy' % (p.name, p.z, p.c, p.t)
+        np.save(out_fn, pixels)
 
 
 if __name__ == '__main__':
