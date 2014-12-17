@@ -49,6 +49,11 @@ public class App {
     return (i < 0) ? path : path.substring(i + 1);
   }
 
+  private static String stripext(String path) {
+    int i = path.lastIndexOf(".");
+    return (i < 0) ? path : path.substring(0, i);
+  }
+
   private static ArrayList<Integer> getShape(ImageReader reader)
     throws NoSuchMethodException,
            IllegalAccessException,
@@ -69,8 +74,8 @@ public class App {
       return;
     }
     String fn = args[0];
-    String bn = basename(fn);
-    String outFn = bn + ".avro";
+    String name = stripext(basename(fn));
+    String outFn = name + ".avro";
 
     ImageReader reader = new ImageReader();
     reader.setId(fn);
@@ -128,7 +133,7 @@ public class App {
       a.setOffsets(Arrays.asList(offsets));
       a.setDeltas(Arrays.asList(deltas));
       a.setData(ByteBuffer.wrap(reader.openBytes(i)));
-      BioImgPlane plane = new BioImgPlane(bn, dimOrder, a);
+      BioImgPlane plane = new BioImgPlane(name, dimOrder, a);
       //--
       if (i == 0) {
         writer.create(plane.getSchema(), new File(outFn));
