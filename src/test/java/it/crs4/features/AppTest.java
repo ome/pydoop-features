@@ -1,6 +1,8 @@
 package it.crs4.features;
 
 import java.io.File;
+import java.util.List;
+import java.nio.ByteBuffer;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -23,15 +25,16 @@ import org.slf4j.LoggerFactory;
 
 public class AppTest extends TestCase {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(AppTest.class);
 
   private boolean littleEndian = true;
   private int pixelType = FormatTools.UINT16;
   private int seriesCount = 1;
+  private String dimOrder = "XYZCT";
   private int w = 512;
-  private int h = 512;
-  private int c = 1;
+  private int h = 256;
   private int z = 5;
+  private int c = 1;
   private int t = 2;
 
   private int size = w * h * c * FormatTools.getBytesPerPixel(pixelType);
@@ -68,7 +71,7 @@ public class AppTest extends TestCase {
     OMEXMLService service = factory.getInstance(OMEXMLService.class);
     IMetadata meta = service.createOMEXMLMetadata();
     for (int s = 0; s < seriesCount; s++) {
-      MetadataTools.populateMetadata(meta, s, null, littleEndian, "XYZCT",
+      MetadataTools.populateMetadata(meta, s, null, littleEndian, dimOrder,
         ptString, w, h, z, c, t, c);
     }
     IFormatWriter writer = new ImageWriter();
@@ -85,6 +88,25 @@ public class AppTest extends TestCase {
     }
     writer.close();
     return id;
+  }
+
+  private void checkPlane(BioImgPlane p, int seriesIdx, int planeIdx) {
+    assertEquals(p.getDimensionOrder().toString(), dimOrder);
+    ArraySlice a = p.getPixelData();
+    assertEquals(a.getDtype(), DType.UINT16);  // FIXME: use lookup table
+    assertEquals(a.getLittleEndian().booleanValue(), littleEndian);
+    List<Integer> shape = a.getShape();
+    assertEquals(shape.size(), dimOrder.length());
+    assertEquals(shape.get(0).intValue(), w);
+    assertEquals(shape.get(1).intValue(), h);
+    assertEquals(shape.get(2).intValue(), z);
+    assertEquals(shape.get(3).intValue(), c);
+    assertEquals(shape.get(4).intValue(), t);
+    ByteBuffer buffer = a.getData();
+    buffer.clear();
+    for (byte b: data[seriesIdx][planeIdx]) {
+      assertEquals(buffer.get(), b);
+    }
   }
 
   public AppTest(String testName) {
@@ -104,17 +126,19 @@ public class AppTest extends TestCase {
     //-------------------------
     File avroF = new File(avroFn);
     avroF.setReadOnly();
+    avroF.deleteOnExit();
     DataFileReader<BioImgPlane> reader = new DataFileReader<BioImgPlane>(
       avroF, new SpecificDatumReader<BioImgPlane>(BioImgPlane.class)
     );
-    BioImgPlane p = null;
+    int seriesIdx = 0;  // FIXME
     int planeIdx = 0;
+    BioImgPlane p = null;
     while (reader.hasNext()) {
       p = reader.next(p);
-      LOGGER.info("plane: {}[{}]", p.name, planeIdx);
+      checkPlane(p, seriesIdx, planeIdx);
       planeIdx++;
     }
-    assertTrue(planeIdx == planesCount);
+    assertEquals(planeIdx, planesCount);
   }
 
 }
