@@ -4,12 +4,8 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.ArrayList;
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
 
 import loci.formats.ImageReader;
-import loci.formats.FormatTools;
 
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.file.DataFileWriter;
@@ -22,59 +18,13 @@ public class App {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
 
-  private static DType convertPT(int pixelType) {
-    switch (pixelType) {
-      case FormatTools.INT8:
-        return DType.INT8;
-      case FormatTools.UINT8:
-        return DType.UINT8;
-      case FormatTools.INT16:
-        return DType.INT16;
-      case FormatTools.UINT16:
-        return DType.UINT16;
-      case FormatTools.INT32:
-        return DType.INT32;
-      case FormatTools.UINT32:
-        return DType.UINT32;
-      case FormatTools.FLOAT:
-        return DType.FLOAT32;
-      case FormatTools.DOUBLE:
-        return DType.FLOAT64;
-    }
-    throw new IllegalArgumentException("Unknown pixel type: " + pixelType);
-  }
-
-  private static String basename(String path) {
-    int i = path.lastIndexOf("/");
-    return (i < 0) ? path : path.substring(i + 1);
-  }
-
-  private static String stripext(String path) {
-    int i = path.lastIndexOf(".");
-    return (i < 0) ? path : path.substring(0, i);
-  }
-
-  private static ArrayList<Integer> getShape(ImageReader reader)
-    throws NoSuchMethodException,
-           IllegalAccessException,
-           InvocationTargetException {
-    String dimOrder = reader.getDimensionOrder();
-    ArrayList<Integer> shape = new ArrayList<Integer>();
-    for (int i = 0; i < dimOrder.length(); i++) {
-      String getterName = "getSize" + dimOrder.charAt(i);
-      Method method = reader.getClass().getMethod(getterName);
-      shape.add((Integer) method.invoke(reader));
-    }
-    return shape;
-  }
-
   public static void main(String[] args) throws Exception {
     if (args.length == 0) {
       System.err.println("Usage: java App IMG_FILE");
       return;
     }
     String fn = args[0];
-    String name = stripext(basename(fn));
+    String name = PathTools.stripext(PathTools.basename(fn));
     String outFn = name + ".avro";
 
     ImageReader reader = new ImageReader();
@@ -96,7 +46,6 @@ public class App {
     int deltaX = reader.getSizeX();
     int deltaY = reader.getSizeY();
     //---------------------------------------
-    ArrayList<Integer> shape = getShape(reader);
     DataFileWriter<BioImgPlane> writer = new DataFileWriter<BioImgPlane>(
       new SpecificDatumWriter<BioImgPlane>(BioImgPlane.class)
     );
@@ -127,9 +76,9 @@ public class App {
       deltas[iT] = 1;
       //--
       ArraySlice a = new ArraySlice();
-      a.setDtype(convertPT(reader.getPixelType()));
+      a.setDtype(ArrayTools.convertPixelType(reader.getPixelType()));
       a.setLittleEndian(reader.isLittleEndian());
-      a.setShape(shape);
+      a.setShape(ArrayTools.getShape(reader));
       a.setOffsets(Arrays.asList(offsets));
       a.setDeltas(Arrays.asList(deltas));
       a.setData(ByteBuffer.wrap(reader.openBytes(i)));
