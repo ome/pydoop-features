@@ -42,18 +42,6 @@ public class AppTest extends TestCase {
 
   private byte[][][] data;
 
-  //-- HACK HACK HACK --
-  private static String basename(String path) {
-    int i = path.lastIndexOf("/");
-    return (i < 0) ? path : path.substring(i + 1);
-  }
-
-  private static String stripext(String path) {
-    int i = path.lastIndexOf(".");
-    return (i < 0) ? path : path.substring(0, i);
-  }
-  //--------------------
-
   private byte[] makeImg() {
     byte[] img = new byte[size];
     for (int i = 0; i < img.length; i++) {
@@ -122,7 +110,7 @@ public class AppTest extends TestCase {
     LOGGER.info("Created {}", imgFn);
     //-- dirty hack incoming --
     App.main(new String[] {imgFn});
-    String avroFn = stripext(basename(imgFn)) + ".avro";
+    String avroFn = PathTools.stripext(PathTools.basename(imgFn)) + ".avro";
     //-------------------------
     File avroF = new File(avroFn);
     avroF.setReadOnly();

@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 
 import loci.formats.FormatTools;
-import loci.formats.ImageReader;
+import loci.formats.IFormatReader;
 
 
 public final class ArrayTools {
@@ -39,7 +39,7 @@ public final class ArrayTools {
    * Get the shape (a list containing the size of each dimension) of
    * the multidimensional data object from a Bio-Formats image reader.
    */
-  public static ArrayList<Integer> getShape(ImageReader reader)
+  public static ArrayList<Integer> getShape(IFormatReader reader)
       throws NoSuchMethodException,
              IllegalAccessException,
              InvocationTargetException {
