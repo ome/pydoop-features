@@ -1,9 +1,6 @@
 package it.crs4.features;
 
 import java.io.File;
-import java.io.PrintWriter;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 import loci.formats.ImageReader;
 
@@ -40,12 +37,7 @@ public class App {
       throw new RuntimeException("Interleaving not supported");
     }
     reader.setSeries(0);
-    //-- FIXME: add support for XY slicing --
-    int offsetX = 0;
-    int offsetY = 0;
-    int deltaX = reader.getSizeX();
-    int deltaY = reader.getSizeY();
-    //---------------------------------------
+    BioImgFactory factory = new BioImgFactory(reader);
     DataFileWriter<BioImgPlane> writer = new DataFileWriter<BioImgPlane>(
       new SpecificDatumWriter<BioImgPlane>(BioImgPlane.class)
     );
@@ -53,37 +45,8 @@ public class App {
     LOGGER.info("Reading from {}", fn);
     LOGGER.info("Writing to {}", outFn);
     for (int i = 0; i < nPlanes; i++) {
-      int[] zct = reader.getZCTCoords(i);
-      LOGGER.debug("Plane {}/{} {}", i + 1, nPlanes, Arrays.toString(zct));
-      String dimOrder = reader.getDimensionOrder();
-      int nDim = dimOrder.length();
-      int iX = dimOrder.indexOf('X');
-      int iY = dimOrder.indexOf('Y');
-      int iZ = dimOrder.indexOf('Z');
-      int iC = dimOrder.indexOf('C');
-      int iT = dimOrder.indexOf('T');
-      Integer[] offsets = new Integer[nDim];
-      offsets[iX] = offsetX;
-      offsets[iY] = offsetY;
-      offsets[iZ] = zct[0];
-      offsets[iC] = zct[1];
-      offsets[iT] = zct[2];
-      Integer[] deltas = new Integer[nDim];
-      deltas[iX] = deltaX;
-      deltas[iY] = deltaY;
-      deltas[iZ] = 1;
-      deltas[iC] = 1;
-      deltas[iT] = 1;
-      //--
-      ArraySlice a = new ArraySlice();
-      a.setDtype(ArrayTools.convertPixelType(reader.getPixelType()));
-      a.setLittleEndian(reader.isLittleEndian());
-      a.setShape(ArrayTools.getShape(reader));
-      a.setOffsets(Arrays.asList(offsets));
-      a.setDeltas(Arrays.asList(deltas));
-      a.setData(ByteBuffer.wrap(reader.openBytes(i)));
-      BioImgPlane plane = new BioImgPlane(name, dimOrder, a);
-      //--
+      // FIXME: add support for XY slicing
+      BioImgPlane plane = factory.build(name, i);
       if (i == 0) {
         writer.create(plane.getSchema(), new File(outFn));
       }
