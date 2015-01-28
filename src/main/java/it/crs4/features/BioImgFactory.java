@@ -1,10 +1,9 @@
 package it.crs4.features;
 
-import java.util.Iterator;
-import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.Arrays;
+import java.nio.ByteBuffer;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 
 import loci.formats.IFormatReader;
 import loci.formats.FormatException;
@@ -22,6 +21,9 @@ public class BioImgFactory {
   /** indices of defaultOrder chars as they appear in dimOrder */
   protected int[] dimIdx;
 
+  /** a list containing the size of each dimension (in dimOrder order) */
+  protected List<Integer> shape;
+
   public BioImgFactory(IFormatReader reader) {
     this.reader = reader;
     this.name = name;
@@ -38,23 +40,22 @@ public class BioImgFactory {
       }
       dimIdx[i] = idx;
     }
+    Integer s[] = new Integer[nDim];
+    s[dimIdx[0]] = reader.getSizeX();
+    s[dimIdx[1]] = reader.getSizeY();
+    s[dimIdx[2]] = reader.getSizeZ();
+    s[dimIdx[3]] = reader.getSizeC();
+    s[dimIdx[4]] = reader.getSizeT();
+    shape = Arrays.asList(s);
   }
 
   public BioImgPlane build(String name, int no)
-      throws NoSuchMethodException,
-             IllegalAccessException,
-             InvocationTargetException,
-             FormatException,
-             IOException {
+      throws FormatException, IOException {
     return build(name, no, 0, 0, reader.getSizeX(), reader.getSizeY());
   }
 
   public BioImgPlane build(String name, int no, int x, int y, int w, int h)
-      throws NoSuchMethodException,
-             IllegalAccessException,
-             InvocationTargetException,
-             FormatException,
-             IOException {
+      throws FormatException, IOException {
     int[] zct = reader.getZCTCoords(no);
     Integer[] offsets = new Integer[nDim];
     offsets[dimIdx[0]] = x;
@@ -72,7 +73,7 @@ public class BioImgFactory {
     ArraySlice a = new ArraySlice();
     a.setDtype(ArrayTools.convertPixelType(reader.getPixelType()));
     a.setLittleEndian(reader.isLittleEndian());
-    a.setShape(ArrayTools.getShape(reader));
+    a.setShape(shape);
     a.setOffsets(Arrays.asList(offsets));
     a.setDeltas(Arrays.asList(deltas));
     a.setData(ByteBuffer.wrap(reader.openBytes(no)));
