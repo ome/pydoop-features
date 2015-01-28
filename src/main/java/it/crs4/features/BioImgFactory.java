@@ -74,7 +74,7 @@ public class BioImgFactory {
     a.setShape(shape);
     a.setOffsets(Arrays.asList(offsets));
     a.setDeltas(Arrays.asList(deltas));
-    a.setData(ByteBuffer.wrap(reader.openBytes(no)));
+    a.setData(ByteBuffer.wrap(reader.openBytes(no, x, y, w, h)));
     return new BioImgPlane(name, dimOrder, a);
   }
 
