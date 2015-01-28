@@ -26,8 +26,9 @@ public final class ArrayTools {
         return DType.FLOAT32;
       case FormatTools.DOUBLE:
         return DType.FLOAT64;
+      default:
+        throw new IllegalArgumentException("Unknown pixel type: " + pixelType);
     }
-    throw new IllegalArgumentException("Unknown pixel type: " + pixelType);
   }
 
 }
