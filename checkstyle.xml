@@ -201,4 +201,8 @@
     <!-- See http://checkstyle.sourceforge.net/config_misc.html#UniqueProperties -->
     <module name="UniqueProperties"/>
 
+    <module name="SuppressionFilter">
+      <property name="file" value="suppressions.xml"/>
+    </module>
+
 </module>

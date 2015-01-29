@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE suppressions PUBLIC
+    "-//Puppy Crawl//DTD Suppressions 1.0//EN"
+    "http://www.puppycrawl.com/dtds/suppressions_1_0.dtd">
+
+<suppressions>
+  <!-- ignore avro-generated src  -->
+  <suppress files="ArraySlice\.java" checks=".*"/>
+  <suppress files="BioImg\.java" checks=".*"/>
+  <suppress files="BioImgPlane\.java" checks=".*"/>
+  <suppress files="DType\.java" checks=".*"/>
+  <suppress files="DataBlock\.java" checks=".*"/>
+</suppressions>
