@@ -1,12 +1,12 @@
 package it.crs4.features;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.util.List;
 import java.nio.ByteBuffer;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.Test;
 
 import loci.formats.FormatTools;
 import loci.formats.MetadataTools;
@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class AppTest extends TestCase {
+public class AppTest {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AppTest.class);
 
@@ -97,14 +97,7 @@ public class AppTest extends TestCase {
     }
   }
 
-  public AppTest(String testName) {
-    super(testName);
-  }
-
-  public static Test suite() {
-    return new TestSuite(AppTest.class);
-  }
-
+  @Test
   public void testApp() throws Exception {
     String imgFn = makeImgFile();
     LOGGER.info("Created {}", imgFn);
