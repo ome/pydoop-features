@@ -5,6 +5,8 @@ import loci.formats.FormatTools;
 
 public final class ArrayTools {
 
+  private ArrayTools() {}
+
   /**
    * Convert a Bio-Formats pixel type to DataBlock's DType format.
    */
