@@ -4,9 +4,13 @@ import java.util.List;
 import java.util.Arrays;
 import java.nio.ByteBuffer;
 import java.io.IOException;
+import java.io.File;
 
 import loci.formats.IFormatReader;
 import loci.formats.FormatException;
+
+import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.avro.file.DataFileWriter;
 
 
 public class BioImgFactory {
@@ -76,6 +80,29 @@ public class BioImgFactory {
     a.setDeltas(Arrays.asList(deltas));
     a.setData(ByteBuffer.wrap(reader.openBytes(no, x, y, w, h)));
     return new BioImgPlane(name, dimOrder, a);
+  }
+
+  public void writeSeries(int series, String name, String fileName)
+      throws FormatException, IOException {
+    writeSeries(series, name, fileName,
+                0, 0, reader.getSizeX(), reader.getSizeY());
+  }
+
+  public void writeSeries(int series, String name, String fileName,
+                          int x, int y, int w, int h)
+      throws FormatException, IOException {
+    reader.setSeries(series);
+    DataFileWriter<BioImgPlane> writer = new DataFileWriter<BioImgPlane>(
+      new SpecificDatumWriter<BioImgPlane>(BioImgPlane.class)
+    );
+    for (int i = 0; i < reader.getImageCount(); i++) {
+      BioImgPlane plane = build(name, i, x, y, w, h);
+      if (i == 0) {
+        writer.create(plane.getSchema(), new File(fileName));
+      }
+      writer.append(plane);
+    }
+    writer.close();
   }
 
 }
