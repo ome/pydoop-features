@@ -35,7 +35,7 @@ public class BioImgFactoryTest {
   private static final String NAME = "pydoop_features_test";
   private static final boolean LITTLE_ENDIAN = true;
   private static final int PIXEL_TYPE = FormatTools.UINT16;
-  private static final int SERIES_COUNT = 1;
+  private static final int SERIES_COUNT = 2;
   private static final String DIM_ORDER = "XYZCT";
   private static final int W = 512;
   private static final int H = 256;
@@ -114,24 +114,27 @@ public class BioImgFactoryTest {
     ImageReader iReader = new ImageReader();
     iReader.setId(imgFn);
     BioImgFactory factory = new BioImgFactory(iReader);
-    File avroF = wd.newFile(String.format("%s.avro", NAME));
-    String avroFn = avroF.getAbsolutePath();
-    LOGGER.info("Avro file: {}", avroFn);
-    int seriesIdx = 0;  // FIXME
-    factory.writeSeries(0, NAME, avroFn);
-    iReader.close();
-    //--
-    DataFileReader<BioImgPlane> aReader = new DataFileReader<BioImgPlane>(
-      avroF, new SpecificDatumReader<BioImgPlane>(BioImgPlane.class)
-    );
-    int planeIdx = 0;
-    BioImgPlane p = null;
-    while (aReader.hasNext()) {
-      p = aReader.next(p);
-      checkPlane(p, seriesIdx, planeIdx);
-      planeIdx++;
+    for (int s = 0; s < SERIES_COUNT; s++) {
+      LOGGER.info("Series: {}", s);
+      String name = String.format("%s_%d", NAME, s);
+      File avroF = wd.newFile(String.format("%s.avro", name));
+      String avroFn = avroF.getAbsolutePath();
+      LOGGER.info("Avro file: {}", avroFn);
+      factory.writeSeries(s, name, avroFn);
+      //--
+      DataFileReader<BioImgPlane> aReader = new DataFileReader<BioImgPlane>(
+        avroF, new SpecificDatumReader<BioImgPlane>(BioImgPlane.class)
+      );
+      int planeIdx = 0;
+      BioImgPlane p = null;
+      while (aReader.hasNext()) {
+        p = aReader.next(p);
+        checkPlane(p, s, planeIdx);
+        planeIdx++;
+      }
+      assertEquals(planeIdx, PLANES_COUNT);
     }
-    assertEquals(planeIdx, PLANES_COUNT);
+    iReader.close();
   }
 
 }
