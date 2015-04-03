@@ -56,15 +56,29 @@
         <artifactId>exec-maven-plugin</artifactId>
         <version>1.3.2</version>
         <configuration>
+          <mainClass>it.crs4.features.ConvertIDL</mainClass>
+          <arguments>
+            <argument>${project.basedir}/src/main/avro/</argument>
+            <argument>${project.basedir}/src/main/avro/</argument>
+          </arguments>
           <additionalClasspathElements>
             <additionalClasspathElement>${project.basedir}/src/test/resources/</additionalClasspathElement>
           </additionalClasspathElements>
           <!-- avoid killAfter deprecation warning -->
           <killAfter>-1</killAfter>
         </configuration>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>java</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
+
   <dependencies>
     <dependency>
       <groupId>ome</groupId>
@@ -94,6 +108,11 @@
     <dependency>
       <groupId>org.apache.avro</groupId>
       <artifactId>avro</artifactId>
+      <version>1.7.7</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro-tools</artifactId>
       <version>1.7.7</version>
     </dependency>
     <dependency>
