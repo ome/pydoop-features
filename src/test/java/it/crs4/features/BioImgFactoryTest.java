@@ -35,6 +35,7 @@ public class BioImgFactoryTest {
   private static final String NAME = "pydoop_features_test";
   private static final boolean LITTLE_ENDIAN = true;
   private static final int PIXEL_TYPE = FormatTools.UINT16;
+  private static final DType EXPECTED_DTYPE = DType.UINT16;
   private static final int SERIES_COUNT = 2;
   private static final String DIM_ORDER = "XYZCT";
   private static final int W = 512;
@@ -79,7 +80,7 @@ public class BioImgFactoryTest {
     data = new byte[SERIES_COUNT][PLANES_COUNT][SIZE];
     for (int s = 0; s < SERIES_COUNT; s++) {
       writer.setSeries(s);
-      for (int p = 0; p < Z*T; p++) {
+      for (int p = 0; p < PLANES_COUNT; p++) {
         byte[] img = makeImg();
         writer.saveBytes(p, img);
         data[s][p] = img;
@@ -91,7 +92,7 @@ public class BioImgFactoryTest {
   private void checkPlane(BioImgPlane p, int seriesIdx, int planeIdx) {
     assertEquals(p.getDimensionOrder().toString(), DIM_ORDER);
     ArraySlice a = p.getPixelData();
-    assertEquals(a.getDtype(), DType.UINT16);  // FIXME: use lookup table
+    assertEquals(a.getDtype(), EXPECTED_DTYPE);
     assertEquals(a.getLittleEndian().booleanValue(), LITTLE_ENDIAN);
     List<Integer> shape = a.getShape();
     assertEquals(shape.size(), DIM_ORDER.length());
