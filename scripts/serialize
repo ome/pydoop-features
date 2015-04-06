@@ -7,5 +7,5 @@ fi
 
 BASEDIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd; cd - >/dev/null)
 pushd ${BASEDIR}/..
-mvn exec:java -Dexec.mainClass="it.crs4.features.App" -Dexec.args="$@"
+mvn exec:exec -Dexec.executable="java" -Dexec.args="-cp %classpath it.crs4.features.App $@"
 popd
