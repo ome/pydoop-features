@@ -49,7 +49,6 @@ public class BioImgRecordReader
     }
     nPlanes = reader.getImageCount();
     reader.setSeries(seriesIdx);
-    nPlanes = 0;
     factory = new BioImgFactory(reader);
     name = PathTools.stripext(PathTools.basename(absPathName));
     planeIdx = 0;

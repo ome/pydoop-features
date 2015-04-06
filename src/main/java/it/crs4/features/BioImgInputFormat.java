@@ -31,7 +31,7 @@ import loci.formats.FormatException;
 /**
  * Similar to FileInputFormat, but with series-based splits
  */
-public abstract class BioImgInputFormat
+public class BioImgInputFormat
     extends FileInputFormat<NullWritable, IndexedRecord> {
 
   private static final Log LOG = LogFactory.getLog(BioImgInputFormat.class);
