@@ -2,7 +2,8 @@
  * Convert *.avdl to *.avsc
  *
  * Based upon an example by Dustin Spicuzza:
- * http://www.virtualroadside.com/blog/index.php/2014/06/08/automatically-generating-avro-schemata-avsc-files-using-maven/
+ * http://www.virtualroadside.com/blog/index.php/2014/06/08/
+ *   automatically-generating-avro-schemata-avsc-files-using-maven/
  */
 
 package it.crs4.features;
@@ -18,11 +19,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class ConvertIDL {
+public final class ConvertIDL {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(
       ConvertIDL.class
   );
+
+  private ConvertIDL() {}
 
   private static class AvdlFilter implements FilenameFilter {
     public boolean accept(File dir, String name) {

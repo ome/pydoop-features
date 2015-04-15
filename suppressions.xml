@@ -11,4 +11,6 @@
   <suppress files="BioImgPlane\.java" checks=".*"/>
   <suppress files="DType\.java" checks=".*"/>
   <suppress files="DataBlock\.java" checks=".*"/>
+  <!-- ignore TODO in comments -->
+  <suppress files=".*" checks="TodoComment"/>
 </suppressions>

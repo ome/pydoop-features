@@ -101,7 +101,7 @@ public class BioImgRecordReader
   }
 
   public float getProgress() throws IOException {
-    return Math.min(1.0f, (planeIdx + 1) / (float)(nPlanes));
+    return Math.min(1.0f, (planeIdx + 1) / (float) nPlanes);
   }
 
   public synchronized void close() throws IOException {
