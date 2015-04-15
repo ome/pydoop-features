@@ -1,3 +1,10 @@
+/**
+ * Convert *.avdl to *.avsc
+ *
+ * Based upon an example by Dustin Spicuzza:
+ * http://www.virtualroadside.com/blog/index.php/2014/06/08/automatically-generating-avro-schemata-avsc-files-using-maven/
+ */
+
 package it.crs4.features;
 
 import java.io.File;
@@ -11,10 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-/**
- * Convert *.avdl to *.avsc
- * http://www.virtualroadside.com/blog/index.php/2014/06/08/automatically-generating-avro-schemata-avsc-files-using-maven/
- */
 public class ConvertIDL {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(
