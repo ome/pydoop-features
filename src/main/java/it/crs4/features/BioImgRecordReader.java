@@ -75,19 +75,18 @@ public class BioImgRecordReader
   }
 
   public boolean nextKeyValue() throws IOException {
-    // TODO: support x/y slicing
+    if (planeIdx >= nPlanes) {
+      value = null;
+      return false;
+    }
     try {
+      // TODO: support x/y slicing
       value = factory.build(String.format("%s_%d", name, seriesIdx), planeIdx);
     } catch (FormatException e) {
       throw new RuntimeException("FormatException: " + e.getMessage());
     }
     planeIdx++;
-    if (planeIdx >= nPlanes) {
-      value = null;
-      return false;
-    } else {
-      return true;
-    }
+    return true;
   }
 
   @Override
