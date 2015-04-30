@@ -9,7 +9,7 @@ die() {
 
 nargs=1
 if [ $# -ne $nargs ]; then
-    die "Usage: $0 IMG_FILE"
+    die "Usage: $0 INPUT"
 fi
 INPUT=$1
 
@@ -24,13 +24,16 @@ INPUT_FORMAT=it.crs4.features.BioImgInputFormat
 
 DFS_INPUT=$(basename ${INPUT})
 OUTPUT=planes_dump
+MR_OUTPUT=planes_metadata
 
 hdfs dfs -mkdir -p /user/${USER}
-hdfs dfs -rmr /user/${USER}/${DFS_INPUT}
-hdfs dfs -put -f ${INPUT} ${DFS_INPUT}
-hdfs dfs -rmr /user/${USER}/${OUTPUT}
+for d in ${DFS_INPUT}, ${OUTPUT}, ${MR_OUTPUT}; do
+    hdfs dfs -rm -r /user/${USER}/${d}
+done
+hdfs dfs -put -f ${INPUT} /user/${USER}/${DFS_INPUT}
 
 pydoop submit \
+    -D bioimg.dump.dir=${OUTPUT} \
     --upload-file-to-cache bioimg.py \
     --upload-file-to-cache ${MPY} \
     --num-reducers 0 \
@@ -39,4 +42,4 @@ pydoop submit \
     --libjars ${FEATURES_JAR},${BF_JAR} \
     --log-level ${LOGLEVEL} ${MRV} \
     --job-name ${JOBNAME} \
-    ${MODULE} ${DFS_INPUT} ${OUTPUT}
+    ${MODULE} ${DFS_INPUT} ${MR_OUTPUT}

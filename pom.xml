@@ -109,7 +109,6 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
       <version>${hadoop.version}</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.avro</groupId>
@@ -148,7 +147,6 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>11.0.2</version>
-      <scope>provided</scope>
     </dependency>
   </dependencies>
 

@@ -18,18 +18,35 @@
 #
 # END_COPYRIGHT
 
+import numpy as np
+
 import pydoop.mapreduce.api as api
 import pydoop.mapreduce.pipes as pp
 from pydoop.avrolib import AvroContext
+import pydoop.hdfs as hdfs
 
 from bioimg import BioImgPlane
 
 
+DUMP_DIR = 'bioimg.dump.dir'
+HDFS_USER = 'pydoop.hdfs.user'
+
+
 class Mapper(api.Mapper):
 
+    def __init__(self, ctx):
+        jc = ctx.job_conf
+        self.out_dir = jc.get(DUMP_DIR, 'planes_dump')
+        self.hdfs_user = jc.get(HDFS_USER, None)
+
     def map(self, ctx):
-        plane = BioImgPlane(ctx.value)
-        ctx.emit(plane.name, plane.dimension_order)
+        p = BioImgPlane(ctx.value)
+        pixels = p.get_xy()
+        bn = '%s-z%04d-c%04d-t%04d.npy' % (p.name, p.z, p.c, p.t)
+        fn = hdfs.path.join(self.out_dir, p.name, bn)
+        with hdfs.open(fn, 'w') as fo:
+            np.save(fo, pixels)
+        ctx.emit(fn, '%s\t%s' % (p.dimension_order, pixels.shape))
 
 
 def __main__():

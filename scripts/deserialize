@@ -30,13 +30,13 @@ from bioimg import BioImgPlane
 
 def make_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('img_file', metavar='IMG_FILE')
+    parser.add_argument('avro_file', metavar='AVRO_FILE')
     return parser
 
 
 # no schema needed for deserialization
-def iterplanes(img_file):
-    with open(img_file, 'rb') as f:
+def iterplanes(avro_file):
+    with open(avro_file, 'rb') as f:
         reader = DataFileReader(f, DatumReader())
         for r in reader:
             yield BioImgPlane(r)
@@ -45,7 +45,7 @@ def iterplanes(img_file):
 def main(argv):
     parser = make_parser()
     args = parser.parse_args(argv)
-    for p in iterplanes(args.img_file):
+    for p in iterplanes(args.avro_file):
         pixels = p.get_xy()
         print p.name, p.dimension_order, pixels.shape
         print pixels[:2, :2]
