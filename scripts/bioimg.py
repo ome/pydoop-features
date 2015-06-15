@@ -28,13 +28,13 @@ class ArraySlice(object):
 
     def __init__(self, avro_record):
         r = avro_record
-        if not r['little_endian']:
-            raise RuntimeError('big endian data not supported (yet)')
         self.shape = r['shape']
         self.offsets = r['offsets']
         self.deltas = r['deltas']
         self.__check_boundaries()
-        dtype = getattr(np, r['dtype'].lower())
+        dtype = np.dtype(r['dtype'].lower()).newbyteorder(
+            '<' if r['little_endian'] else '>'
+        )
         self.__check_size(r['data'], dtype)
         self.data = np.fromstring(r['data'], dtype=dtype).reshape(r['deltas'])
 
@@ -50,7 +50,7 @@ class ArraySlice(object):
 
     def __check_size(self, data, dtype):
         n_elements = reduce(operator.mul, self.deltas)
-        expected_size = n_elements * dtype().nbytes
+        expected_size = n_elements * dtype.itemsize
         if len(data) != expected_size:
             raise ValueError(
                 'unexpected data size (%d != %d)' % (len(data), expected_size)
