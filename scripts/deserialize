@@ -19,10 +19,19 @@
 # END_COPYRIGHT
 
 import sys
+import os
+import warnings
 import argparse
 
-from avro.datafile import DataFileReader
-from avro.io import DatumReader
+try:
+    from pyavroc import AvroFileReader
+except ImportError:
+    from avro.datafile import DataFileReader
+    from avro.io import DatumReader
+    class AvroFileReader(DataFileReader):
+        def __init__(self, f):
+            super(AvroFileReader, self).__init__(f, DatumReader())
+    warnings.warn("pyavroc not found, using standard avro lib\n")
 import numpy as np
 
 from bioimg import BioImgPlane
@@ -31,13 +40,14 @@ from bioimg import BioImgPlane
 def make_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('avro_file', metavar='AVRO_FILE')
+    parser.add_argument('out_dir', metavar='OUT_DIR')
     return parser
 
 
 # no schema needed for deserialization
 def iterplanes(avro_file):
     with open(avro_file, 'rb') as f:
-        reader = DataFileReader(f, DatumReader())
+        reader = AvroFileReader(f)
         for r in reader:
             yield BioImgPlane(r)
 
@@ -45,11 +55,16 @@ def iterplanes(avro_file):
 def main(argv):
     parser = make_parser()
     args = parser.parse_args(argv)
+    try:
+        os.makedirs(args.out_dir)
+    except OSError as e:
+        sys.exit('Cannot create output dir: %s' % e)
     for p in iterplanes(args.avro_file):
         pixels = p.get_xy()
         print p.name, p.dimension_order, pixels.shape
         print pixels[:2, :2]
-        out_fn = '%s-z%04d-c%04d-t%04d.npy' % (p.name, p.z, p.c, p.t)
+        out_bn = '%s-z%04d-c%04d-t%04d.npy' % (p.name, p.z, p.c, p.t)
+        out_fn = os.path.join(args.out_dir, out_bn)
         np.save(out_fn, pixels)
 
 
