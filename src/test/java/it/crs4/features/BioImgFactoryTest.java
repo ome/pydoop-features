@@ -63,9 +63,10 @@ public class BioImgFactoryTest {
   private static final int Z = 5;
   private static final int C = 1;
   private static final int T = 2;
+  private static final int SPP = 1;  // Samples per pixel (e.g., 3 for RGB)
 
-  private static final int SIZE = W * H * C * FormatTools.getBytesPerPixel(
-    PIXEL_TYPE);
+  private static final int SIZE = W * H * SPP * FormatTools.getBytesPerPixel(
+      PIXEL_TYPE);
   private static final int PLANES_COUNT = Z * T;
 
   private static byte[][][] data;
@@ -92,7 +93,7 @@ public class BioImgFactoryTest {
     IMetadata meta = service.createOMEXMLMetadata();
     for (int s = 0; s < SERIES_COUNT; s++) {
       MetadataTools.populateMetadata(meta, s, null, LITTLE_ENDIAN, DIM_ORDER,
-        ptString, W, H, Z, C, T, C);
+        ptString, W, H, Z, C, T, SPP);
     }
     IFormatWriter writer = new ImageWriter();
     writer.setMetadataRetrieve(meta);
