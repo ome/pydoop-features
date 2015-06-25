@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# run "mvn package" in main project dir to build FEATURES_JAR
+
+die() {
+    echo $1 1>&2
+    exit 1
+}
+
+nargs=2
+if [ $# -ne $nargs ]; then
+    die "Usage: $0 DFS_INPUT DFS_OUTPUT"
+fi
+DFS_INPUT=$1
+MR_OUTPUT=$2
+
+FEATURES_JAR=../target/pydoop-features-1.0-SNAPSHOT.jar
+BF_JAR=/home/${USER}/.m2/repository/ome/bioformats_package/5.1.0-HDFS/bioformats_package-5.1.0-HDFS.jar
+MODULE=features
+MPY=${MODULE}.py
+JOBNAME=${MODULE}-job
+LOGLEVEL=DEBUG
+MRV="--mrv2"
+INPUT_FORMAT=it.crs4.features.BioImgInputFormat
+
+
+hdfs dfs -rm -r ${MR_OUTPUT}
+pydoop submit \
+    --upload-file-to-cache bioimg.py \
+    --upload-file-to-cache ${MPY} \
+    --num-reducers 0 \
+    --input-format ${INPUT_FORMAT} \
+    --avro-input v \
+    --libjars ${FEATURES_JAR},${BF_JAR} \
+    --log-level ${LOGLEVEL} ${MRV} \
+    --job-name ${JOBNAME} \
+    ${MODULE} ${DFS_INPUT} ${MR_OUTPUT}

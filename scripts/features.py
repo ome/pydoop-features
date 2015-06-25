@@ -17,32 +17,45 @@
 # END_COPYRIGHT
 
 """
-Pydoop script for image feature calculation.
+Distributed image feature calculation with wnd-charm.
 """
-import numpy as np
 
-import pydoop.hdfs as hdfs
-import pydoop.utils as utils
+import re
 
+import pychrm
+from pychrm.FeatureSet import Signatures
+from pychrm.PyImageMatrix import PyImageMatrix
 
-def get_array(path, user=None):
-    with hdfs.open(path, user=user) as f:
-        return np.load(f)
+import pydoop.mapreduce.api as api
+import pydoop.mapreduce.pipes as pp
+from pydoop.avrolib import AvroContext
+
+from bioimg import BioImgPlane
 
 
 def calc_features(img_arr):
-    # FIXME: dummy
-    return np.random.random(img_arr.shape)
+    assert len(img_arr.shape) == 2
+    pychrm_matrix = PyImageMatrix()
+    pychrm_matrix.allocate(img_arr.shape[1], img_arr.shape[0])
+    numpy_matrix = pychrm_matrix.as_ndarray()
+    numpy_matrix[:] = img_arr
+    feature_plan = pychrm.StdFeatureComputationPlans.getFeatureSet()
+    wnd_charm_options = ""
+    fts = Signatures.NewFromFeatureComputationPlan(
+        pychrm_matrix, feature_plan, wnd_charm_options
+    )
+    return fts.values
 
 
-def mapper(_, record, writer, conf):
-    out_dir = conf.get('out.dir', utils.make_random_str())
-    user = conf.get('hdfs.user', '')
-    hdfs.mkdir(out_dir, user='')  # does nothing if out_dir already exists
-    img_path = record.strip()
-    a = get_array(img_path)
-    out_a = calc_features(a)
-    out_path = hdfs.path.join(out_dir, '%s.out' % hdfs.path.basename(img_path))
-    with hdfs.open(out_path, 'w', user=user) as fo:
-        np.save(fo, out_a)  # actual output
-    writer.emit(img_path, fo.name)  # info (tab-separated input-output)
+class Mapper(api.Mapper):
+
+    def map(self, ctx):
+        p = BioImgPlane(ctx.value)
+        pixels = p.get_xy()
+        tag = '%s-z%04d-c%04d-t%04d.npy' % (p.name, p.z, p.c, p.t)
+        features = calc_features(pixels)
+        ctx.emit(tag, re.sub('\s+', ' ', repr(features)))
+
+
+def __main__():
+    pp.run_task(pp.Factory(mapper_class=Mapper), context_class=AvroContext)
