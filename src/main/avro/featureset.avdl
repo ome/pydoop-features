@@ -1,0 +1,21 @@
+@namespace("it.crs4.features")
+protocol FeatureSet {
+
+  record Signatures {
+    //-- from pychrm.FeatureSet.Signatures --
+    array<string> names;
+    array<double> values;
+    union { null, string } options;
+    union { null, string } version;
+    union { null, string } source_file;
+    union { null, string } path_to_image;
+    union { null, string } path_to_sigfile;
+    //-- additional --
+    union { null, string } plane_tag;
+  }
+
+}
+
+// Local Variables:
+// mode: java
+// End:

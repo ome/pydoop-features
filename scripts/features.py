@@ -41,10 +41,23 @@ def calc_features(img_arr):
     numpy_matrix[:] = img_arr
     feature_plan = pychrm.StdFeatureComputationPlans.getFeatureSet()
     wnd_charm_options = ""
-    fts = Signatures.NewFromFeatureComputationPlan(
+    return Signatures.NewFromFeatureComputationPlan(
         pychrm_matrix, feature_plan, wnd_charm_options
     )
-    return fts.values
+
+
+def to_avro(signatures):
+    try:
+        rec = {'names': signatures.names, 'values': signatures.values}
+    except AttributeError:
+        raise RuntimeError('signatures obj must have names and values attrs')
+    for k in ('options', 'version', 'source_file',
+              'path_to_image', 'path_to_sigfile'):
+        try:
+            rec[k] = getattr(signatures, k)
+        except AttributeError:
+            pass
+    return rec
 
 
 class Mapper(api.Mapper):
@@ -52,9 +65,10 @@ class Mapper(api.Mapper):
     def map(self, ctx):
         p = BioImgPlane(ctx.value)
         pixels = p.get_xy()
-        tag = '%s-z%04d-c%04d-t%04d.npy' % (p.name, p.z, p.c, p.t)
-        features = calc_features(pixels)
-        ctx.emit(tag, re.sub('\s+', ' ', repr(features)))
+        plane_tag = '%s-z%04d-c%04d-t%04d' % (p.name, p.z, p.c, p.t)
+        out_rec = to_avro(calc_features(pixels))
+        out_rec['plane_tag'] = plane_tag
+        ctx.emit(None, out_rec)
 
 
 def __main__():

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# run "mvn package" in main project dir to build FEATURES_JAR
+# run "mvn package" in main project dir to build FEATURES_JAR and OUT_SCHEMA_F
 
 die() {
     echo $1 1>&2
@@ -15,6 +15,9 @@ DFS_INPUT=$1
 MR_OUTPUT=$2
 
 FEATURES_JAR=../target/pydoop-features-1.0-SNAPSHOT.jar
+OUT_SCHEMA_F=../src/main/avro/Signatures.avsc
+OUT_SCHEMA=$(cat ${OUT_SCHEMA_F})
+
 BF_JAR=/home/${USER}/.m2/repository/ome/bioformats_package/5.1.0-HDFS/bioformats_package-5.1.0-HDFS.jar
 MODULE=features
 MPY=${MODULE}.py
@@ -26,11 +29,13 @@ INPUT_FORMAT=it.crs4.features.BioImgInputFormat
 
 hdfs dfs -rm -r ${MR_OUTPUT}
 pydoop submit \
+    -D pydoop.mapreduce.avro.value.output.schema="${OUT_SCHEMA}" \
     --upload-file-to-cache bioimg.py \
     --upload-file-to-cache ${MPY} \
     --num-reducers 0 \
     --input-format ${INPUT_FORMAT} \
     --avro-input v \
+    --avro-output v \
     --libjars ${FEATURES_JAR},${BF_JAR} \
     --log-level ${LOGLEVEL} ${MRV} \
     --job-name ${JOBNAME} \
