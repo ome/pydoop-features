@@ -1,0 +1,15 @@
+*~
+*.pyc
+target/
+
+# generated from .avdl
+src/main/avro/*.avsc
+
+# generated from .avsc
+src/main/java/it/crs4/features/ArraySlice.java
+src/main/java/it/crs4/features/BioImg.java
+src/main/java/it/crs4/features/BioImgPlane.java
+src/main/java/it/crs4/features/DType.java
+src/main/java/it/crs4/features/DataBlock.java
+src/main/java/it/crs4/features/FeatureSet.java
+src/main/java/it/crs4/features/Signatures.java
