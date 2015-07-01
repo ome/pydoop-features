@@ -26,11 +26,7 @@ import argparse
 try:
     from pyavroc import AvroFileReader
 except ImportError:
-    from avro.datafile import DataFileReader
-    from avro.io import DatumReader
-    class AvroFileReader(DataFileReader):
-        def __init__(self, f):
-            super(AvroFileReader, self).__init__(f, DatumReader())
+    from pyavroc_emu import AvroFileReader
     warnings.warn("pyavroc not found, using standard avro lib\n")
 import numpy as np
 
@@ -61,8 +57,6 @@ def main(argv):
         sys.exit('Cannot create output dir: %s' % e)
     for p in iterplanes(args.avro_file):
         pixels = p.get_xy()
-        print p.name, p.dimension_order, pixels.shape
-        print pixels[:2, :2]
         out_bn = '%s-z%04d-c%04d-t%04d.npy' % (p.name, p.z, p.c, p.t)
         out_fn = os.path.join(args.out_dir, out_bn)
         np.save(out_fn, pixels)
