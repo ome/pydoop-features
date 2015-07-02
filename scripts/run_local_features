@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ "$#" == 0 ]; then
+    echo "USAGE: ./$(basename $0) IMG_FILE"
+    exit 2
+fi
+img_fn=$1
+img_bn=$(basename ${img_fn})
+avro_fn="${img_bn%.*}.avro"
+
+./serialize ${img_fn}
+python local_features.py ../${avro_fn}
