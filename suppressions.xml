@@ -11,6 +11,8 @@
   <suppress files="BioImgPlane\.java" checks=".*"/>
   <suppress files="DType\.java" checks=".*"/>
   <suppress files="DataBlock\.java" checks=".*"/>
+  <suppress files="FeatureSet\.java" checks=".*"/>
+  <suppress files="Signatures\.java" checks=".*"/>
   <!-- ignore TODO in comments -->
   <suppress files=".*" checks="TodoComment"/>
 </suppressions>
