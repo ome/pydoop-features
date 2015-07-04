@@ -73,20 +73,20 @@ public class BioImgInputFormat
     // Since it comes from a FileStatus, it's an absolute path
     String absPathName = path.toString();
     FileSystem fs = path.getFileSystem(conf);
-    // one split per series -- ignore planesPerSplit for now
-    assert planesPerSplit < 1;
-    long len = 1;
     ImageReader reader = new ImageReader();
     try {
       reader.setId(absPathName);
     } catch (FormatException e) {
       throw new RuntimeException("FormatException: " + e.getMessage());
     }
-    int nSeries = reader.getSeriesCount();
+    int nPlanes = reader.getSeriesCount() * reader.getImageCount();
     reader.close();
-    LOG.info(String.format("%s: n. series = %d", absPathName, nSeries));
-    for (long i = 0; i < nSeries; i++) {
+    LOG.debug(String.format("%s: n. planes = %d", absPathName, nPlanes));
+    // FIXME: handle planesPerSplit = 0 (i.e., property not set)
+    for (int i = 0; i < nPlanes; i += planesPerSplit) {
       // For now we just hack the default FileSplit
+      int len = Math.min(planesPerSplit, nPlanes - i);
+      LOG.debug(String.format("adding split: (%d, %d)", i, len));
       splits.add(new FileSplit(path, i, len, new String[] {}));
     }
     return splits;

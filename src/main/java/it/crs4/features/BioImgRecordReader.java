@@ -39,7 +39,6 @@ import loci.formats.ImageReader;
 import loci.formats.FormatException;
 
 
-// Everything is based on the one-split-per-series assumption
 public class BioImgRecordReader
     extends RecordReader<NullWritable, IndexedRecord> {
 
@@ -47,17 +46,18 @@ public class BioImgRecordReader
 
   private ImageReader reader;
   private BioImgFactory factory;
-  private int seriesIdx;
-  private int planeIdx;
+  private int globalPlaneIdx;
+  private int planeCounter;
   private int nPlanes;
+  private int planesPerSeries;
   private String name;
   private IndexedRecord value;
 
   public void initialize(InputSplit genericSplit, TaskAttemptContext context)
     throws IOException {
     FileSplit split = (FileSplit) genericSplit;
-    seriesIdx = (int) split.getStart();
-    assert split.getLength() == 1;
+    globalPlaneIdx = (int) split.getStart();
+    nPlanes = (int) split.getLength();
     Path file = split.getPath();
     FileSystem fs = file.getFileSystem(context.getConfiguration());
     String absPathName = fs.getFileStatus(file).getPath().toString();
@@ -67,25 +67,29 @@ public class BioImgRecordReader
     } catch (FormatException e) {
       throw new RuntimeException("FormatException: " + e.getMessage());
     }
-    nPlanes = reader.getImageCount();
-    reader.setSeries(seriesIdx);
+    planesPerSeries = reader.getImageCount();
     factory = new BioImgFactory(reader);
     name = PathTools.stripext(PathTools.basename(absPathName));
-    planeIdx = 0;
+    planeCounter = 0;
   }
 
   public boolean nextKeyValue() throws IOException {
-    if (planeIdx >= nPlanes) {
+    if (planeCounter >= nPlanes) {
       value = null;
       return false;
     }
+    int seriesIdx = globalPlaneIdx / planesPerSeries;
+    int planeIdx = globalPlaneIdx % planesPerSeries;
+    LOG.debug(String.format("series: %d, plane: %d", seriesIdx, planeIdx));
+    reader.setSeries(seriesIdx);
     try {
       // TODO: support x/y slicing
       value = factory.build(String.format("%s_%d", name, seriesIdx), planeIdx);
     } catch (FormatException e) {
       throw new RuntimeException("FormatException: " + e.getMessage());
     }
-    planeIdx++;
+    planeCounter++;
+    globalPlaneIdx++;
     return true;
   }
 
@@ -100,7 +104,7 @@ public class BioImgRecordReader
   }
 
   public float getProgress() throws IOException {
-    return Math.min(1.0f, (planeIdx + 1) / (float) nPlanes);
+    return Math.min(1.0f, (planeCounter + 1) / (float) nPlanes);
   }
 
   public synchronized void close() throws IOException {
