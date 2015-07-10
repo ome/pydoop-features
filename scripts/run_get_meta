@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# run "mvn package" in main project dir to build FEATURES_JAR
+
+die() {
+    echo $1 1>&2
+    exit 1
+}
+
+minargs=2
+if [ $# -lt ${minargs} ]; then
+    die "Usage: $0 DFS_INPUT DFS_OUTPUT [LINES_PER_MAP]"
+fi
+DFS_INPUT=$1
+MR_OUTPUT=$2
+if [ $# -gt ${minargs} ]; then
+    LINES_PER_MAP=$3
+else
+    LINES_PER_MAP=1
+fi
+
+FEATURES_JAR=../target/pydoop-features-1.0-SNAPSHOT.jar
+BF_JAR=/home/${USER}/.m2/repository/ome/bioformats_package/5.1.0-HDFS/bioformats_package-5.1.0-HDFS.jar
+export HADOOP_CLASSPATH="${BF_JAR}"
+
+hdfs dfs -rm -r ${MR_OUTPUT}
+hadoop jar ${FEATURES_JAR} it.crs4.pydoop.GetMeta \
+    -libjars "${BF_JAR}" \
+    -D mapreduce.input.lineinputformat.linespermap="${LINES_PER_MAP}" \
+    ${DFS_INPUT} ${MR_OUTPUT}
