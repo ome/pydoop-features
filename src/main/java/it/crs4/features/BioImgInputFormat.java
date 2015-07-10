@@ -79,10 +79,14 @@ public class BioImgInputFormat
     } catch (FormatException e) {
       throw new RuntimeException("FormatException: " + e.getMessage());
     }
-    int nPlanes = reader.getSeriesCount() * reader.getImageCount();
+    int nSeries = reader.getSeriesCount();
+    int planesPerSeries = reader.getImageCount();
     reader.close();
+    if (planesPerSplit < 1) {
+      planesPerSplit = planesPerSeries;
+    }
+    int nPlanes = nSeries * planesPerSeries;
     LOG.debug(String.format("%s: n. planes = %d", absPathName, nPlanes));
-    // FIXME: handle planesPerSplit = 0 (i.e., property not set)
     for (int i = 0; i < nPlanes; i += planesPerSplit) {
       // For now we just hack the default FileSplit
       int len = Math.min(planesPerSplit, nPlanes - i);
