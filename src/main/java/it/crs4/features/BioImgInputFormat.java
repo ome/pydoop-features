@@ -20,9 +20,15 @@
 
 package it.crs4.features;
 
+import java.net.URI;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.StringTokenizer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -31,6 +37,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
@@ -47,41 +54,100 @@ import loci.formats.FormatException;
 
 /**
  * An input format for biomedical images, based upon Bio-Formats.
+ *
+ * Image files contain one or more series of bidimensional planes.
+ * This input format assigns a fixed number of planes (controllable
+ * via PLANES_PER_MAP) to each input split (which can possibly span
+ * multiple series).
+ *
+ * Since opening all input files to get the number of series and the
+ * number of planes per series can take a long time, this information
+ * can be provided as an additional metadata file via META_FN.
+ * Currently, this is simply a tab-separated file with three columns:
+ * 1. fully qualified image path; 2. number of series; 3. number of
+ * planes per series.
  */
 public class BioImgInputFormat
     extends FileInputFormat<NullWritable, IndexedRecord> {
 
   private static final Log LOG = LogFactory.getLog(BioImgInputFormat.class);
   public static final String PLANES_PER_MAP = "it.crs4.features.planespermap";
+  public static final String META_FN = "it.crs4.features.metadatafile";
+
+  private Map<String, List<Integer>> metadata;
+
+  private void addMetadataRow(String metadataRow) {
+    StringTokenizer tokenizer = new StringTokenizer(metadataRow.trim(), "\t");
+    String key = tokenizer.nextToken();
+    List<Integer> value = new ArrayList<Integer>();
+    while (tokenizer.hasMoreTokens()) {
+      value.add(Integer.parseInt(tokenizer.nextToken()));
+    }
+    metadata.put(key, value);
+  }
+
+  private void getMetadata(Configuration conf) throws IOException {
+    metadata = new HashMap<String, List<Integer>>();
+    String pathName = conf.get(META_FN);
+    if (null != pathName) {
+      URI uri = URI.create(pathName);
+      FileSystem fs = FileSystem.get(uri, conf);
+      FSDataInputStream in = fs.open(new Path(uri));
+      BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+      String line;
+      while (true) {
+        line = reader.readLine();
+        if (null == line) {
+          break;
+        }
+        addMetadataRow(line);
+      }
+      in.close();
+      LOG.debug("Got metadata from " + pathName);
+    }
+  }
 
   @Override
   public List<InputSplit> getSplits(JobContext job) throws IOException {
+    Configuration conf = job.getConfiguration();
+    getMetadata(conf);
     List<InputSplit> splits = new ArrayList<InputSplit>();
     int planesPerSplit = getPlanesPerSplit(job);
     for (FileStatus status: listStatus(job)) {
       splits.addAll(
-          getSplitsForFile(status, job.getConfiguration(), planesPerSplit));
+          getSplitsForFile(status, conf, planesPerSplit));
     }
     return splits;
   }
 
-  public static List<FileSplit> getSplitsForFile(
+  public List<FileSplit> getSplitsForFile(
       FileStatus status, Configuration conf, int planesPerSplit
   ) throws IOException {
     List<FileSplit> splits = new ArrayList<FileSplit>();
+    int nSeries;
+    int planesPerSeries;
     Path path = status.getPath();
     // Since it comes from a FileStatus, it's an absolute path
     String absPathName = path.toString();
-    FileSystem fs = path.getFileSystem(conf);
-    ImageReader reader = new ImageReader();
-    try {
-      reader.setId(absPathName);
-    } catch (FormatException e) {
-      throw new RuntimeException("FormatException: " + e.getMessage());
+    List<Integer> md = metadata.get(absPathName);
+    if (null != md) {
+      nSeries = md.get(0);
+      planesPerSeries = md.get(1);
+    } else {
+      if (!metadata.isEmpty()) {
+        LOG.warn("no metadata for " + absPathName);
+      }
+      FileSystem fs = path.getFileSystem(conf);
+      ImageReader reader = new ImageReader();
+      try {
+        reader.setId(absPathName);
+      } catch (FormatException e) {
+        throw new RuntimeException("FormatException: " + e.getMessage());
+      }
+      nSeries = reader.getSeriesCount();
+      planesPerSeries = reader.getImageCount();
+      reader.close();
     }
-    int nSeries = reader.getSeriesCount();
-    int planesPerSeries = reader.getImageCount();
-    reader.close();
     if (planesPerSplit < 1) {
       planesPerSplit = planesPerSeries;
     }
@@ -108,6 +174,14 @@ public class BioImgInputFormat
 
   public static int getPlanesPerSplit(JobContext job) {
     return job.getConfiguration().getInt(PLANES_PER_MAP, 0);
+  }
+
+  public static void setMetadataFile(JobContext job, String pathName) {
+    job.getConfiguration().set(META_FN, pathName);
+  }
+
+  public static String getMetadataFile(JobContext job) {
+    return job.getConfiguration().get(META_FN);
   }
 
 }
