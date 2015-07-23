@@ -76,6 +76,7 @@ public class BioImgInputFormat
 
   private Map<String, List<Integer>> metadata;
 
+  // FIXME: use CSVReader
   private void addMetadataRow(String metadataRow) {
     StringTokenizer tokenizer = new StringTokenizer(metadataRow.trim(), "\t");
     String key = tokenizer.nextToken();
