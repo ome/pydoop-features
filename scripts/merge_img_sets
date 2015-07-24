@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if [ "$#" == 0 ]; then
+    echo "USAGE: ./$(basename $0) IMG_SET_LIST OUT_FN"
+    exit 2
+fi
+
+CP_FN=/tmp/maven_classpath.txt
+BASEDIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd; cd - >/dev/null)
+PARDIR=${BASEDIR}/..
+pushd ${PARDIR}
+mvn dependency:build-classpath -Dmdep.outputFile=${CP_FN}
+popd
+
+export CLASSPATH=$(cat ${CP_FN}):${PARDIR}/target/classes
+java it.crs4.features.MergeImgSets $@
