@@ -17,12 +17,27 @@
 # END_COPYRIGHT
 
 """
-Minimal CP example.
+Minimal distributed CP example.
 """
 
+import logging
+import logging.config
+logging.root.setLevel(logging.INFO)
+if len(logging.root.handlers) == 0:
+    logging.root.addHandler(logging.StreamHandler())
+
 import os
+import uuid
+
+import matplotlib
+matplotlib.use('Agg')
 
 import Image
+import cellprofiler.preferences as cpprefs
+cpprefs.set_headless()  # ASAP
+cpprefs.set_allow_schema_write(False)
+from cellprofiler.pipeline import Pipeline
+from cellprofiler.utilities.cpjvm import cp_start_vm, cp_stop_vm
 
 import pydoop.mapreduce.api as api
 import pydoop.mapreduce.pipes as pp
@@ -42,6 +57,8 @@ class Mapper(api.Mapper):
         super(Mapper, self).__init__(ctx)
         self.img_set = []
         self.cwd = os.getcwd()
+        self.pipeline_filename = '/tmp/short.cppipe'  # FIXME: get from DC
+        cp_start_vm()
         self.ctx = ctx
 
     def map(self, ctx):
@@ -60,11 +77,34 @@ class Mapper(api.Mapper):
             out_fn = 'z%04d_%s' % (p.z, tag)
             im.save(out_fn)
             img_list.append(os.path.join(self.cwd, out_fn))
-            # TODO: run cp on these files
-        ctx.emit(str(p.z), ', '.join(img_list))
+            results = self.__run_cp(img_list)
+        ctx.emit(str(p.z), ', '.join(results))
+
+    def __run_cp(self, img_list):
+        image_set_file = os.path.join(os.getcwd(), uuid.uuid4().hex)
+        with open(image_set_file, 'w') as fo:
+            for img in img_list:
+                fo.write('%s\n' % img)
+        cpprefs.set_image_set_file(image_set_file)
+        out_dir = os.path.join(os.getcwd(), uuid.uuid4().hex)
+        os.mkdir(out_dir)
+        cpprefs.set_default_output_directory(out_dir)
+        pipeline = Pipeline()
+        pipeline.load(self.pipeline_filename)
+        pipeline.read_file_list(image_set_file)
+        pipeline.run(
+            image_set_start=None,
+            image_set_end=None,
+            grouping=None,
+            measurements_filename=None,
+            initial_measurements=None
+        )
+        # FIXME: make the actual results available
+        return os.listdir(out_dir)
 
     def close(self):
         self.__process_current_set(self.ctx)
+        cp_stop_vm()
 
 
 def __main__():
