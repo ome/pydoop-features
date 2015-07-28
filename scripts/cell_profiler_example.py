@@ -28,6 +28,7 @@ if len(logging.root.handlers) == 0:
 
 import os
 import uuid
+import csv
 
 import matplotlib
 matplotlib.use('Agg')
@@ -48,6 +49,12 @@ from bioimg import BioImgPlane
 # --- FIXME: the following info should be extracted from the pipeline file
 CHANNEL_TAGS = ['D.TIF', 'F.TIF', 'R.TIF']
 SET_SIZE = len(CHANNEL_TAGS)
+RESULTS_BASENAMES = {
+    'IMAGE': 'Image.csv',
+    'NUCLEI': 'Nuclei.csv',
+    'CELLS': 'Cells.csv',
+    'CYTOPLASM': 'Cytoplasm.csv',
+}
 #-------------------------------------------------------------------------
 
 
@@ -77,8 +84,8 @@ class Mapper(api.Mapper):
             out_fn = 'z%04d_%s' % (p.z, tag)
             im.save(out_fn)
             img_list.append(os.path.join(self.cwd, out_fn))
-            results = self.__run_cp(img_list)
-        ctx.emit(str(p.z), ', '.join(results))
+        results = self.__run_cp(img_list)
+        ctx.emit(str(p.z), repr(results))
 
     def __run_cp(self, img_list):
         image_set_file = os.path.join(os.getcwd(), uuid.uuid4().hex)
@@ -99,8 +106,15 @@ class Mapper(api.Mapper):
             measurements_filename=None,
             initial_measurements=None
         )
-        # FIXME: make the actual results available
-        return os.listdir(out_dir)
+        return self.__build_results_dict(out_dir)
+
+    def __build_results_dict(self, out_dir):
+        with open(os.path.join(out_dir, RESULTS_BASENAMES['IMAGE'])) as f:
+            results = csv.DictReader(f).next()
+        for tag in 'NUCLEI', 'CELLS', 'CYTOPLASM':
+            with open(os.path.join(out_dir, RESULTS_BASENAMES[tag])) as f:
+                results[tag] = list(csv.DictReader(f))
+        return results
 
     def close(self):
         self.__process_current_set(self.ctx)
