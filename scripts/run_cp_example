@@ -8,13 +8,15 @@ die() {
     exit 1
 }
 
-minargs=2
+minargs=3
 if [ $# -lt ${minargs} ]; then
-    die "Usage: $0 INPUT OUTPUT [PLANES_PER_MAP]"
+    die "Usage: $0 INPUT OUTPUT PIPELINE [PLANES_PER_MAP]"
 fi
 INPUT=$1
 OUTPUT=$2
-PLANES_PER_MAP=$3
+PIPELINE_FN=$3
+PIPELINE_BN=$(basename "${PIPELINE_FN}")
+PLANES_PER_MAP=$4
 [ -z "${PLANES_PER_MAP}" ] && PLANES_PER_MAP=0  # entire series
 # TODO: add support for metadata file, as in run_features
 
@@ -29,7 +31,9 @@ INPUT_FORMAT=it.crs4.features.BioImgInputFormat
 
 
 pydoop submit \
+    -D it.crs4.features.cppipe="${PIPELINE_BN}" \
     -D it.crs4.features.planespermap="${PLANES_PER_MAP}" \
+    --upload-file-to-cache "${PIPELINE_FN}" \
     --upload-file-to-cache bioimg.py \
     --upload-file-to-cache ${MPY} \
     --num-reducers 0 \

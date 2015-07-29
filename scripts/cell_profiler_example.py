@@ -46,6 +46,9 @@ from pydoop.avrolib import AvroContext
 
 from bioimg import BioImgPlane
 
+# basename of the pipeline file, to be uploaded via distributed cache
+PIPELINE_BN = 'it.crs4.features.cppipe'
+
 # --- FIXME: the following info should be extracted from the pipeline file
 CHANNEL_TAGS = ['D.TIF', 'F.TIF', 'R.TIF']
 SET_SIZE = len(CHANNEL_TAGS)
@@ -64,7 +67,7 @@ class Mapper(api.Mapper):
         super(Mapper, self).__init__(ctx)
         self.img_set = []
         self.cwd = os.getcwd()
-        self.pipeline_filename = '/tmp/short.cppipe'  # FIXME: get from DC
+        self.pipeline_filename = ctx.job_conf.get(PIPELINE_BN)
         cp_start_vm()
         self.ctx = ctx
 
