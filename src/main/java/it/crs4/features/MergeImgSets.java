@@ -74,13 +74,18 @@ public final class MergeImgSets {
     return filesets;
   }
 
-  private static void write(List<List<String>> filesets, String outFn)
+  private static void write(
+      List<List<String>> filesets, String outFn, int replication)
       throws Exception {
     ImageReader reader = new ImageReader();
     reader.setId(filesets.get(0).get(0));
     ServiceFactory factory = new ServiceFactory();
     OMEXMLService service = factory.getInstance(OMEXMLService.class);
     IMetadata meta = service.createOMEXMLMetadata();
+    int sizeZ = filesets.size();
+    if (replication > 1) {
+      sizeZ *= replication;
+    }
     MetadataTools.populateMetadata(
         meta,
         0,  // n.series
@@ -90,7 +95,7 @@ public final class MergeImgSets {
         FormatTools.getPixelTypeString(reader.getPixelType()),
         reader.getSizeX(),
         reader.getSizeY(),
-        filesets.size(),  // sizeZ
+        sizeZ,
         filesets.get(0).size(),  // sizeC
         1,  // sizeT
         1  // samples per pixels -- assumes input images are not RGB
@@ -102,14 +107,20 @@ public final class MergeImgSets {
     writer.setSeries(0);
     int planeCount = 0;
     for (List<String> s: filesets) {
+      List<byte[]> planes = new ArrayList<byte[]>();
       for (String fn: s) {
         reader = new ImageReader();
         reader.setId(fn);
         assert (1 == reader.getSeriesCount());
         assert (1 == reader.getImageCount());
-        writer.saveBytes(planeCount, reader.openBytes(0));
-        planeCount++;
+        planes.add(reader.openBytes(0));
         reader.close();
+      }
+      for (int i = 0; i < replication; i++) {
+        for (byte[] p: planes) {
+          writer.saveBytes(planeCount, p);
+          planeCount++;
+        }
       }
     }
     writer.close();
@@ -117,11 +128,15 @@ public final class MergeImgSets {
 
   public static void main (String[] args) throws Exception {
     if (args.length < 2) {
-      System.err.println("Usage: java MergeImgSets IMG_SET_LIST OUT_FN");
+      System.err.println("Usage: java MergeImgSets IMG_SET_LIST OUT_FN [N]");
       return;
     }
     String setsFn = args[0];
     String outFn = args[1];
+    int replication = 1;
+    if (args.length > 2) {
+      replication = Integer.parseInt(args[2]);
+    }
 
     List<List<String>> filesets = getFilesets(setsFn);
     int sizeZ = filesets.size();
@@ -136,7 +151,7 @@ public final class MergeImgSets {
         System.exit(1);
       }
     }
-    write(filesets, outFn);
+    write(filesets, outFn, replication);
   }
 
 }
