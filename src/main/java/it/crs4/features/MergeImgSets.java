@@ -21,11 +21,9 @@
 package it.crs4.features;
 
 
-import java.io.File;
 import java.io.FileReader;
 import java.util.List;
 import java.util.ArrayList;
-import java.nio.ByteBuffer;
 
 import loci.formats.FormatTools;
 import loci.formats.MetadataTools;
@@ -38,6 +36,13 @@ import loci.formats.services.OMEXMLService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.ParseException;
 
 
 /**
@@ -117,6 +122,9 @@ public final class MergeImgSets {
         reader.close();
       }
       for (int i = 0; i < replication; i++) {
+        if (replication > 1) {
+          LOGGER.info("replica #" + (i+1));
+        }
         for (byte[] p: planes) {
           writer.saveBytes(planeCount, p);
           planeCount++;
@@ -126,16 +134,33 @@ public final class MergeImgSets {
     writer.close();
   }
 
-  public static void main (String[] args) throws Exception {
-    if (args.length < 2) {
-      System.err.println("Usage: java MergeImgSets IMG_SET_LIST OUT_FN [N]");
-      return;
+  private static CommandLine parseCmdLine(Options opts, String[] args)
+      throws ParseException {
+    opts.addOption("r", "replication", true, "n. replicas for each image set");
+    CommandLineParser parser = new GnuParser();
+    return parser.parse(opts, args);
+  }
+
+  public static void main(String[] args) throws Exception {
+    Options opts = new Options();
+    CommandLine cmd = null;
+    try {
+      cmd = parseCmdLine(opts, args);
+    } catch (ParseException e) {
+      System.err.println("ERROR: " + e.getMessage());
+      System.exit(1);
     }
-    String setsFn = args[0];
-    String outFn = args[1];
+    String[] posArgs = cmd.getArgs();
+    if (posArgs.length < 2) {
+      HelpFormatter fmt = new HelpFormatter();
+      fmt.printHelp("java MergeImgSets IMG_SET_LIST OUT_FN", opts);
+      System.exit(2);
+    }
+    String setsFn = posArgs[0];
+    String outFn = posArgs[1];
     int replication = 1;
-    if (args.length > 2) {
-      replication = Integer.parseInt(args[2]);
+    if (cmd.hasOption("replication")) {
+      replication = Integer.parseInt(cmd.getOptionValue("replication"));
     }
 
     List<List<String>> filesets = getFilesets(setsFn);
