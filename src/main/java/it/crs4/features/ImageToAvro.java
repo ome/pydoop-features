@@ -40,15 +40,11 @@ public final class ImageToAvro {
     }
     String fn = args[0];
     String name = PathTools.stripext(PathTools.basename(fn));
-    String outFn = name + ".avro";
 
     ImageReader reader = new ImageReader();
     reader.setId(fn);
     LOGGER.info("Reading from {}", fn);
     int seriesCount = reader.getSeriesCount();
-    if (seriesCount != 1) {
-      throw new RuntimeException("Multi-series img not supported");
-    }
     if (reader.isRGB()) {
       throw new RuntimeException("RGB img not supported");
     }
@@ -56,9 +52,20 @@ public final class ImageToAvro {
       throw new RuntimeException("Interleaving not supported");
     }
     BioImgFactory factory = new BioImgFactory(reader);
+
     // FIXME: add support for XY slicing
-    factory.writeSeries(0, name, outFn);
-    LOGGER.info("Writing to {}", outFn);
+    String seriesName;
+    String outFn;
+    for (int i = 0; i < seriesCount; i++) {
+      if (seriesCount <= 1) {
+        seriesName = name;
+      } else {
+        seriesName = String.format("%s_%d", name, i);
+      }
+      outFn = seriesName + ".avro";
+      factory.writeSeries(i, seriesName, outFn);
+      LOGGER.info("Writing to {}", outFn);
+    }
     reader.close();
     LOGGER.info("All done");
   }
