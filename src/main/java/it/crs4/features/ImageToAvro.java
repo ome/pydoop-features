@@ -26,15 +26,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public final class App {
+public final class ImageToAvro {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(
+      ImageToAvro.class);
 
-  private App() {}
+  private ImageToAvro() {}
 
   public static void main(String[] args) throws Exception {
     if (args.length == 0) {
-      System.err.println("Usage: java App IMG_FILE");
+      System.err.println("Usage: java ImageToAvro IMG_FILE");
       return;
     }
     String fn = args[0];
