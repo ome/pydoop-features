@@ -22,6 +22,7 @@ import sys
 import os
 import warnings
 import argparse
+from contextlib import closing
 
 try:
     from pyavroc import AvroFileReader
@@ -29,7 +30,7 @@ except ImportError:
     from pyavroc_emu import AvroFileReader
     warnings.warn("pyavroc not found, using standard avro lib\n")
 import numpy as np
-import Image
+from libtiff import TIFF
 
 from bioimg import BioImgPlane
 
@@ -64,9 +65,9 @@ def main(argv):
         if args.img:
             # an image's X is an array's Y and vice versa
             pixels = pixels.reshape(pixels.shape[1], pixels.shape[0])
-            im = Image.fromarray(pixels)
             out_fn = os.path.join(args.out_dir, '%s.tif' % out_tag)
-            im.save(out_fn)
+            with closing(TIFF.open(out_fn, mode="w")) as fo:
+                fo.write_image(pixels)
         else:
             out_fn = os.path.join(args.out_dir, '%s.npy' % out_tag)
             np.save(out_fn, pixels)
