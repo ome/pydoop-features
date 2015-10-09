@@ -58,22 +58,22 @@ public class BioImgFactoryTest {
   private static final DType EXPECTED_DTYPE = DType.UINT16;
   private static final int SERIES_COUNT = 2;
   private static final String DIM_ORDER = "XYZCT";
-  private static final int W = 512;
-  private static final int H = 256;
-  private static final int Z = 5;
-  private static final int C = 1;
-  private static final int T = 2;
+  private static final int SIZE_X = 512;
+  private static final int SIZE_Y = 256;
+  private static final int SIZE_Z = 5;
+  private static final int SIZE_C = 1;
+  private static final int SIZE_T = 2;
   private static final int SPP = 1;  // Samples per pixel (e.g., 3 for RGB)
 
-  private static final int SIZE = W * H * SPP * FormatTools.getBytesPerPixel(
-      PIXEL_TYPE);
-  private static final int PLANES_COUNT = Z * T;
+  private static final int PLANE_SIZE =
+    SIZE_X * SIZE_Y * SPP * FormatTools.getBytesPerPixel(PIXEL_TYPE);
+  private static final int PLANES_COUNT = SIZE_Z * SIZE_T;
 
   private static byte[][][] data;
   private static File target;
 
   private static byte[] makeImg() {
-    byte[] img = new byte[SIZE];
+    byte[] img = new byte[PLANE_SIZE];
     for (int i = 0; i < img.length; i++) {
       img[i] = (byte) (256 * Math.random());
     }
@@ -93,12 +93,12 @@ public class BioImgFactoryTest {
     IMetadata meta = service.createOMEXMLMetadata();
     for (int s = 0; s < SERIES_COUNT; s++) {
       MetadataTools.populateMetadata(meta, s, null, LITTLE_ENDIAN, DIM_ORDER,
-        ptString, W, H, Z, C, T, SPP);
+        ptString, SIZE_X, SIZE_Y, SIZE_Z, SIZE_C, SIZE_T, SPP);
     }
     IFormatWriter writer = new ImageWriter();
     writer.setMetadataRetrieve(meta);
     writer.setId(target.getAbsolutePath());
-    data = new byte[SERIES_COUNT][PLANES_COUNT][SIZE];
+    data = new byte[SERIES_COUNT][PLANES_COUNT][PLANE_SIZE];
     for (int s = 0; s < SERIES_COUNT; s++) {
       writer.setSeries(s);
       for (int p = 0; p < PLANES_COUNT; p++) {
@@ -117,11 +117,11 @@ public class BioImgFactoryTest {
     assertEquals(a.getLittleEndian().booleanValue(), LITTLE_ENDIAN);
     List<Integer> shape = a.getShape();
     assertEquals(shape.size(), DIM_ORDER.length());
-    assertEquals(shape.get(0).intValue(), W);
-    assertEquals(shape.get(1).intValue(), H);
-    assertEquals(shape.get(2).intValue(), Z);
-    assertEquals(shape.get(3).intValue(), C);
-    assertEquals(shape.get(4).intValue(), T);
+    assertEquals(shape.get(0).intValue(), SIZE_X);
+    assertEquals(shape.get(1).intValue(), SIZE_Y);
+    assertEquals(shape.get(2).intValue(), SIZE_Z);
+    assertEquals(shape.get(3).intValue(), SIZE_C);
+    assertEquals(shape.get(4).intValue(), SIZE_T);
     ByteBuffer buffer = a.getData();
     buffer.clear();
     for (byte b: data[seriesIdx][planeIdx]) {
