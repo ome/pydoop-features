@@ -52,6 +52,7 @@ public class BioImgFactoryTest {
   private static final Logger LOGGER = LoggerFactory.getLogger(
     BioImgFactoryTest.class);
 
+  // independent
   private static final String NAME = "pydoop_features_test";
   private static final boolean LITTLE_ENDIAN = true;
   private static final int PIXEL_TYPE = FormatTools.UINT16;
@@ -61,13 +62,14 @@ public class BioImgFactoryTest {
   private static final int SIZE_X = 512;
   private static final int SIZE_Y = 256;
   private static final int SIZE_Z = 5;
-  private static final int SIZE_C = 1;
+  private static final int EFF_SIZE_C = 1;
   private static final int SIZE_T = 2;
   private static final int SPP = 1;  // Samples per pixel (e.g., 3 for RGB)
 
+  // dependent
   private static final int PLANE_SIZE =
     SIZE_X * SIZE_Y * SPP * FormatTools.getBytesPerPixel(PIXEL_TYPE);
-  private static final int PLANES_COUNT = SIZE_Z * SIZE_T;
+  private static final int PLANES_COUNT = EFF_SIZE_C * SIZE_Z * SIZE_T;
 
   private static byte[][][] data;
   private static File target;
@@ -91,9 +93,10 @@ public class BioImgFactoryTest {
     ServiceFactory factory = new ServiceFactory();
     OMEXMLService service = factory.getInstance(OMEXMLService.class);
     IMetadata meta = service.createOMEXMLMetadata();
+    int sizeC = SPP * EFF_SIZE_C;
     for (int s = 0; s < SERIES_COUNT; s++) {
       MetadataTools.populateMetadata(meta, s, null, LITTLE_ENDIAN, DIM_ORDER,
-        ptString, SIZE_X, SIZE_Y, SIZE_Z, SIZE_C, SIZE_T, SPP);
+        ptString, SIZE_X, SIZE_Y, SIZE_Z, sizeC, SIZE_T, SPP);
     }
     IFormatWriter writer = new ImageWriter();
     writer.setMetadataRetrieve(meta);
@@ -120,7 +123,7 @@ public class BioImgFactoryTest {
     assertEquals(shape.get(0).intValue(), SIZE_X);
     assertEquals(shape.get(1).intValue(), SIZE_Y);
     assertEquals(shape.get(2).intValue(), SIZE_Z);
-    assertEquals(shape.get(3).intValue(), SIZE_C);
+    assertEquals(shape.get(3).intValue(), EFF_SIZE_C);
     assertEquals(shape.get(4).intValue(), SIZE_T);
     ByteBuffer buffer = a.getData();
     buffer.clear();
