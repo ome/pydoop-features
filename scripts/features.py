@@ -22,8 +22,8 @@ Distributed image feature calculation with wnd-charm.
 
 import re
 
-import pychrm
-from pychrm.FeatureSet import Signatures
+import wndcharm
+from wndcharm.FeatureVector import FeatureVector
 from pychrm.PyImageMatrix import PyImageMatrix
 
 import pydoop.mapreduce.api as api
@@ -33,26 +33,23 @@ from pydoop.avrolib import AvroContext
 from bioimg import BioImgPlane
 
 
-def calc_features(img_arr):
+def calc_features(img_arr, plane_tag):
     assert len(img_arr.shape) == 2
     pychrm_matrix = PyImageMatrix()
     pychrm_matrix.allocate(img_arr.shape[1], img_arr.shape[0])
     numpy_matrix = pychrm_matrix.as_ndarray()
     numpy_matrix[:] = img_arr
-    feature_plan = pychrm.StdFeatureComputationPlans.getFeatureSet()
-    wnd_charm_options = ""
-    return Signatures.NewFromFeatureComputationPlan(
-        pychrm_matrix, feature_plan, wnd_charm_options
-    )
-
+    signatures = FeatureVector(basename=plane_tag)
+    signatures.original_px_plane = pychrm_matrix
+    signatures.GenerateFeatures()
+    return signatures
 
 def to_avro(signatures):
     try:
-        rec = {'names': signatures.names, 'values': signatures.values}
+        rec = {'feature_names': signatures.feature_names, 'values': signatures.values}
     except AttributeError:
-        raise RuntimeError('signatures obj must have names and values attrs')
-    for k in ('options', 'version', 'source_file',
-              'path_to_image', 'path_to_sigfile'):
+        raise RuntimeError('signatures obj must have feature_names and values attrs')
+    for k in ('name', 'feature_set_version', 'source_filepath', 'auxiliary_feature_storage'):
         try:
             rec[k] = getattr(signatures, k)
         except AttributeError:
@@ -66,7 +63,7 @@ class Mapper(api.Mapper):
         p = BioImgPlane(ctx.value)
         pixels = p.get_xy()
         plane_tag = '%s-z%04d-c%04d-t%04d' % (p.name, p.z, p.c, p.t)
-        out_rec = to_avro(calc_features(pixels))
+        out_rec = to_avro(plane_tag, calc_features(pixels, plane_tag))
         out_rec['plane_tag'] = plane_tag
         ctx.emit(None, out_rec)
 
