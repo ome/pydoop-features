@@ -20,11 +20,8 @@
 Distributed image feature calculation with wnd-charm.
 """
 
-import re
-
-import wndcharm
 from wndcharm.FeatureVector import FeatureVector
-from pychrm.PyImageMatrix import PyImageMatrix
+from wndcharm.PyImageMatrix import PyImageMatrix
 
 import pydoop.mapreduce.api as api
 import pydoop.mapreduce.pipes as pp
@@ -44,12 +41,17 @@ def calc_features(img_arr, plane_tag):
     signatures.GenerateFeatures()
     return signatures
 
+
 def to_avro(signatures):
     try:
-        rec = {'feature_names': signatures.feature_names, 'values': signatures.values}
+        rec = {
+            'feature_names': signatures.feature_names,
+            'values': signatures.values
+        }
     except AttributeError:
-        raise RuntimeError('signatures obj must have feature_names and values attrs')
-    for k in ('name', 'feature_set_version', 'source_filepath', 'auxiliary_feature_storage'):
+        raise RuntimeError('"feature_names" and "values" are required attrs')
+    for k in ('name', 'feature_set_version', 'source_filepath',
+              'auxiliary_feature_storage'):
         try:
             rec[k] = getattr(signatures, k)
         except AttributeError:

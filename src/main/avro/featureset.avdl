@@ -2,14 +2,13 @@
 protocol FeatureSet {
 
   record Signatures {
-    //-- from pychrm.FeatureSet.Signatures --
-    array<string> names;
+    //-- from WND-CHARM --
+    array<string> feature_names;
     array<double> values;
-    union { null, string } options;
-    union { null, string } version;
-    union { null, string } source_file;
-    union { null, string } path_to_image;
-    union { null, string } path_to_sigfile;
+    union { null, string } name;
+    union { null, string } feature_set_version;
+    union { null, string } source_filepath;
+    union { null, string } auxiliary_feature_storage;
     //-- additional --
     union { null, string } plane_tag;
   }
