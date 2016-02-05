@@ -33,6 +33,7 @@ import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.file.DataFileWriter;
 
 
+// FIXME: maybe it's better to split RGB channels
 public class BioImgFactory {
 
   private static final String DEFAULT_ORDER = "XYZCT";
@@ -66,7 +67,7 @@ public class BioImgFactory {
     s[dimIdx[0]] = reader.getSizeX();
     s[dimIdx[1]] = reader.getSizeY();
     s[dimIdx[2]] = reader.getSizeZ();
-    s[dimIdx[3]] = reader.getSizeC();
+    s[dimIdx[3]] = reader.getEffectiveSizeC();
     s[dimIdx[4]] = reader.getSizeT();
     shape = Arrays.asList(s);
   }

@@ -64,7 +64,7 @@ public class BioImgFactoryTest {
   private static final int SIZE_Z = 5;
   private static final int EFF_SIZE_C = 1;
   private static final int SIZE_T = 2;
-  private static final int SPP = 1;  // Samples per pixel (e.g., 3 for RGB)
+  private static final int SPP = 3;  // Samples per pixel (e.g., 3 for RGB)
 
   // dependent
   private static final int PLANE_SIZE =

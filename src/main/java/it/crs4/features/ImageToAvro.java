@@ -45,12 +45,6 @@ public final class ImageToAvro {
     reader.setId(fn);
     LOGGER.info("Reading from {}", fn);
     int seriesCount = reader.getSeriesCount();
-    if (reader.isRGB()) {
-      throw new RuntimeException("RGB img not supported");
-    }
-    if (reader.isInterleaved()) {
-      throw new RuntimeException("Interleaving not supported");
-    }
     BioImgFactory factory = new BioImgFactory(reader);
 
     // FIXME: add support for XY slicing
