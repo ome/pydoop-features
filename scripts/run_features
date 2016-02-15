@@ -40,6 +40,7 @@ pydoop submit \
     -D it.crs4.features.planespermap="${PLANES_PER_MAP}" \
     -D pydoop.mapreduce.avro.value.output.schema="${OUT_SCHEMA}" \
     --upload-file-to-cache bioimg.py \
+    --upload-file-to-cache feature_calc.py \
     --upload-file-to-cache ${MPY} \
     --num-reducers 0 \
     --input-format ${INPUT_FORMAT} \

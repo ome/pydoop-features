@@ -31,7 +31,7 @@ except ImportError:
     warnings.warn("pyavroc not found, using standard avro lib\n")
 
 from bioimg import BioImgPlane
-from features import calc_features, to_avro
+from feature_calc import calc_features, to_avro
 
 
 def main(argv):
