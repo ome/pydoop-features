@@ -10,7 +10,7 @@ def calc_features(img_arr, plane_tag):
     numpy_matrix[:] = img_arr
     signatures = FeatureVector(basename=plane_tag)
     signatures.original_px_plane = pychrm_matrix
-    signatures.GenerateFeatures()
+    signatures.GenerateFeatures(write_to_disk=False)
     return signatures
 
 
