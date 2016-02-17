@@ -1,13 +1,20 @@
 #!/bin/bash
 
+set -eu
+
 if [ "$#" == 0 ]; then
-    echo "USAGE: ./$(basename $0) IMG_FILE"
+    echo "USAGE: ./$(basename "$0") IMG_FILE"
     exit 2
 fi
 
-BASEDIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd; cd - >/dev/null)
-pushd ${BASEDIR}/..
-mvn exec:exec \
-    -Dexec.executable="java" \
-    -Dexec.args="-cp %classpath it.crs4.features.ImageToAvro $@"
-popd
+SCRIPTS_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd; cd - >/dev/null)
+REPO_ROOT=$(dirname "${SCRIPTS_DIR}")
+PKG=( "${REPO_ROOT}"/target/pydoop-features-*.jar )
+if [ ! -e ${PKG[0]} ]; then
+    pushd "${REPO_ROOT}"
+    mvn clean compile assembly:single
+    popd
+    PKG=( "${REPO_ROOT}"/target/pydoop-features-*.jar )
+fi
+echo "package file: ${PKG[0]}"
+java -cp "${PKG[0]}" it.crs4.features.ImageToAvro "$@"
