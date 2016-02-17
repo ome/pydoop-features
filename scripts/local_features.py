@@ -23,6 +23,7 @@ Local feature calculation with wnd-charm (for comparison).
 import sys
 import os
 import warnings
+import subprocess
 
 try:
     from pyavroc import AvroFileReader, AvroFileWriter
@@ -34,17 +35,28 @@ from bioimg import BioImgPlane
 from feature_calc import calc_features, to_avro
 
 
+def get_schema(basename):
+    scripts_dir = os.path.abspath(os.path.dirname(__file__))
+    repo_root = os.path.dirname(scripts_dir)
+    fn = os.path.join(repo_root, "src", "main", "avro", basename)
+    if not os.path.exists(fn):
+        old_pwd = os.getcwd()
+        try:
+            os.chdir(repo_root)
+            subprocess.call("mvn compile", shell=True)
+        finally:
+            os.chdir(old_pwd)
+    return fn
+
+
 def main(argv):
     try:
         avro_fn = argv[1]
     except IndexError:
         sys.exit('Usage: python %s avro_fn' % argv[0])
 
-    try:
-        with open('../src/main/avro/Signatures.avsc') as f:
-            out_schema = f.read()
-    except IOError:
-        sys.exit('could not read out schema file, run mvn package in main dir')
+    with open(get_schema('Signatures.avsc')) as f:
+        out_schema = f.read()
 
     tag, ext = os.path.splitext(os.path.basename(avro_fn))
     out_fn = '%s_features%s' % (tag, ext)
