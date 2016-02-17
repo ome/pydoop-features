@@ -1,7 +1,8 @@
-set -eux
+set -ex
 
 . /etc/profile
-. /opt/rh/python27/enable
+
+set -u
 
 easy_install pip
 
@@ -16,6 +17,7 @@ popd
 
 python set_bf_ver.py
 pip install avro
+pip install libtiff
 
 pushd pydoop-features
 mvn install -DskipTests

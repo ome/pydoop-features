@@ -11,14 +11,14 @@ RUN yum -y install \
     tar \
     git \
     python27 \
-    python27-numpy \
+    python27-scipy \
     python27-devel \
     java-1.8.0-openjdk-devel \
     fftw-static \
     fftw-devel \
     libtiff-devel \
-    gcc \
     gcc-c++ \
     swig
+RUN echo ". /opt/rh/python27/enable" >/etc/profile.d/python.sh
 RUN bash install_maven.sh
 RUN bash install_pydoop_features.sh
