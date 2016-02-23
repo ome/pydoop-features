@@ -20,7 +20,7 @@ pip install avro
 pip install libtiff
 
 pushd pydoop-features
-mvn install -DskipTests
+mvn clean compile assembly:single
 popd
 
 pushd wnd-charm
