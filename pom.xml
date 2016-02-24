@@ -121,7 +121,6 @@
       <groupId>ome</groupId>
       <artifactId>formats-bsd</artifactId>
       <version>${bio-formats.version}</version>
-      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>ome</groupId>

@@ -27,13 +27,13 @@ import java.io.IOException;
 import java.io.File;
 
 import loci.formats.IFormatReader;
+import loci.formats.ChannelSeparator;
 import loci.formats.FormatException;
 
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.file.DataFileWriter;
 
 
-// FIXME: maybe it's better to split RGB channels
 public class BioImgFactory {
 
   private static final String DEFAULT_ORDER = "XYZCT";
@@ -49,6 +49,7 @@ public class BioImgFactory {
   protected List<Integer> shape;
 
   public BioImgFactory(IFormatReader reader) {
+    reader = new ChannelSeparator(reader);
     this.reader = reader;
     dimOrder = reader.getDimensionOrder();
     if (dimOrder.length() != N_DIM) {
