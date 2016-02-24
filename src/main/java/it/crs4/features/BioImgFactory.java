@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.File;
 
 import loci.formats.IFormatReader;
+import loci.formats.ChannelSeparator;
 import loci.formats.FormatException;
 
 import org.apache.avro.specific.SpecificDatumWriter;
@@ -48,6 +49,7 @@ public class BioImgFactory {
   protected List<Integer> shape;
 
   public BioImgFactory(IFormatReader reader) {
+    reader = new ChannelSeparator(reader);
     this.reader = reader;
     dimOrder = reader.getDimensionOrder();
     if (dimOrder.length() != N_DIM) {
@@ -66,7 +68,7 @@ public class BioImgFactory {
     s[dimIdx[0]] = reader.getSizeX();
     s[dimIdx[1]] = reader.getSizeY();
     s[dimIdx[2]] = reader.getSizeZ();
-    s[dimIdx[3]] = reader.getSizeC();
+    s[dimIdx[3]] = reader.getEffectiveSizeC();
     s[dimIdx[4]] = reader.getSizeT();
     shape = Arrays.asList(s);
   }
