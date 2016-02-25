@@ -44,8 +44,8 @@ public final class ImageToAvro {
     ImageReader reader = new ImageReader();
     reader.setId(fn);
     LOGGER.info("Reading from {}", fn);
-    int seriesCount = reader.getSeriesCount();
     BioImgFactory factory = new BioImgFactory(reader);
+    int seriesCount = factory.getSeriesCount();
 
     // FIXME: add support for XY slicing
     String seriesName;
@@ -57,7 +57,8 @@ public final class ImageToAvro {
         seriesName = String.format("%s_%d", name, i);
       }
       outFn = seriesName + ".avro";
-      factory.writeSeries(i, seriesName, outFn);
+      factory.setSeries(i);
+      factory.writeSeries(seriesName, outFn);
       LOGGER.info("Writing to {}", outFn);
     }
     reader.close();

@@ -81,7 +81,7 @@ public class BioImgRecordReader
     int seriesIdx = globalPlaneIdx / planesPerSeries;
     int planeIdx = globalPlaneIdx % planesPerSeries;
     LOG.debug(String.format("series: %d, plane: %d", seriesIdx, planeIdx));
-    reader.setSeries(seriesIdx);
+    factory.setSeries(seriesIdx);
     try {
       // TODO: support x/y slicing
       value = factory.build(String.format("%s_%d", name, seriesIdx), planeIdx);

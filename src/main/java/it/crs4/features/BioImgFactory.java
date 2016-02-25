@@ -34,6 +34,9 @@ import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.file.DataFileWriter;
 
 
+/**
+ * Builds BioImgPlane Avro records from Bio-Formats image planes.
+ */
 public class BioImgFactory {
 
   private static final String DEFAULT_ORDER = "XYZCT";
@@ -52,7 +55,7 @@ public class BioImgFactory {
   protected List<Integer> shape;
 
   /** Set the current series and populate dimOrder, dimIdx and shape */
-  private void setSeries(int series) {
+  public void setSeries(int series) {
     if (this.series == series) {
       return;
     }
@@ -80,9 +83,24 @@ public class BioImgFactory {
     shape = Arrays.asList(s);
   }
 
+  /**
+   * Constructs a BioImgFactory based on the given IFormatReader.
+   *
+   * NOTE: there is currently no protection against the reader's state
+   * being changed by the caller. In particular, reader.setSeries
+   * must not be called (call setSeries on the BioImgFactory instead).
+   */
   public BioImgFactory(IFormatReader reader) {
     this.reader = new ChannelSeparator(reader);
     setSeries(this.reader.getSeries());
+  }
+
+  public int getSeries() {
+    return series;
+  }
+
+  public int getSeriesCount() {
+    return reader.getSeriesCount();
   }
 
   public BioImgPlane build(String name, int no)
@@ -122,15 +140,14 @@ public class BioImgFactory {
     return new BioImgPlane(name, dimOrder, a);
   }
 
-  public void writeSeries(int seriesIdx, String name, String fileName)
+  public void writeSeries(String name, String fileName)
       throws FormatException, IOException {
-    writeSeries(seriesIdx, name, fileName, 0, 0, -1, -1);
+    writeSeries(name, fileName, 0, 0, -1, -1);
   }
 
-  public void writeSeries(int seriesIdx, String name, String fileName,
+  public void writeSeries(String name, String fileName,
                           int x, int y, int w, int h)
       throws FormatException, IOException {
-    setSeries(seriesIdx);
     DataFileWriter<BioImgPlane> writer = new DataFileWriter<BioImgPlane>(
       new SpecificDatumWriter<BioImgPlane>(BioImgPlane.class)
     );

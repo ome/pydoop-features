@@ -163,13 +163,16 @@ public class BioImgFactoryTest {
     ImageReader iReader = new ImageReader();
     iReader.setId(imgFn);
     BioImgFactory factory = new BioImgFactory(iReader);
+    assertEquals(factory.getSeriesCount(), SERIES_COUNT);
     for (int s = 0; s < SERIES_COUNT; s++) {
       LOGGER.info("Series: {}", s);
       String name = String.format("%s_%d", NAME, s);
       File avroF = wd.newFile(String.format("%s.avro", name));
       String avroFn = avroF.getAbsolutePath();
       LOGGER.info("Avro file: {}", avroFn);
-      factory.writeSeries(s, name, avroFn);
+      factory.setSeries(s);
+      assertEquals(factory.getSeries(), s);
+      factory.writeSeries(name, avroFn);
       //--
       DataFileReader<BioImgPlane> aReader = new DataFileReader<BioImgPlane>(
         avroF, new SpecificDatumReader<BioImgPlane>(BioImgPlane.class)
