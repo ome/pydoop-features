@@ -42,17 +42,22 @@ public class BioImgFactory {
   protected IFormatReader reader;
   protected String dimOrder;
 
+  /** current series */
+  protected int series = -1;
+
   /** indices of DEFAULT_ORDER chars as they appear in dimOrder */
   protected int[] dimIdx;
 
   /** a list containing the size of each dimension (in dimOrder order) */
   protected List<Integer> shape;
 
-  /**
-   * Populate dimOrder, dimIdx and shape based on the core metadata
-   * for the current series
-   */
-  private void populateVectors() {
+  /** Set the current series and populate dimOrder, dimIdx and shape */
+  private void setSeries(int series) {
+    if (this.series == series) {
+      return;
+    }
+    reader.setSeries(series);
+    this.series = series;
     dimOrder = reader.getDimensionOrder();
     if (dimOrder.length() != N_DIM) {
       throw new RuntimeException("the number of dimensions must be " + N_DIM);
@@ -77,7 +82,7 @@ public class BioImgFactory {
 
   public BioImgFactory(IFormatReader reader) {
     this.reader = new ChannelSeparator(reader);
-    populateVectors();
+    setSeries(this.reader.getSeries());
   }
 
   public BioImgPlane build(String name, int no)
@@ -117,16 +122,15 @@ public class BioImgFactory {
     return new BioImgPlane(name, dimOrder, a);
   }
 
-  public void writeSeries(int series, String name, String fileName)
+  public void writeSeries(int seriesIdx, String name, String fileName)
       throws FormatException, IOException {
-    writeSeries(series, name, fileName, 0, 0, -1, -1);
+    writeSeries(seriesIdx, name, fileName, 0, 0, -1, -1);
   }
 
-  public void writeSeries(int series, String name, String fileName,
+  public void writeSeries(int seriesIdx, String name, String fileName,
                           int x, int y, int w, int h)
       throws FormatException, IOException {
-    reader.setSeries(series);
-    populateVectors();
+    setSeries(seriesIdx);
     DataFileWriter<BioImgPlane> writer = new DataFileWriter<BioImgPlane>(
       new SpecificDatumWriter<BioImgPlane>(BioImgPlane.class)
     );
