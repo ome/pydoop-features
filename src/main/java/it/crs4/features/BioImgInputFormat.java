@@ -66,6 +66,10 @@ import loci.formats.FormatException;
  * Currently, this is simply a tab-separated file with three columns:
  * 1. fully qualified image path; 2. number of series; 3. number of
  * planes per series.
+ *
+ * NOTE: currently, this input format and its associated record reader
+ * assume that all series have the same core metadata (most notably,
+ * the same number of planes).
  */
 public class BioImgInputFormat
     extends FileInputFormat<NullWritable, IndexedRecord> {
