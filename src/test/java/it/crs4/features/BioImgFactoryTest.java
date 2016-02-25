@@ -58,28 +58,40 @@ public class BioImgFactoryTest {
   private static final boolean LITTLE_ENDIAN = true;
   private static final int PIXEL_TYPE = FormatTools.UINT16;
   private static final DType EXPECTED_DTYPE = DType.UINT16;
-  private static final int SERIES_COUNT = 2;
   private static final String DIM_ORDER = "XYCZT";
-  private static final int SIZE_X = 512;
-  private static final int SIZE_Y = 256;
-  private static final int SIZE_Z = 5;
+  private static final int SERIES_COUNT = 2;
+  // use different size{X,Y,Z} for the two series
+  private static final int[] SIZE_X = {512, 256};
+  private static final int[] SIZE_Y = {256, 128};
+  private static final int[] SIZE_Z = {5, 4};
   private static final int EFF_SIZE_C = 1;
   private static final int SIZE_T = 2;
   private static final int SPP = 3;  // Samples per pixel (e.g., 3 for RGB)
 
   // dependent
-  private static final int PLANE_SIZE =
-    SIZE_X * SIZE_Y * FormatTools.getBytesPerPixel(PIXEL_TYPE);
-  private static final int RGB_PLANE_SIZE = PLANE_SIZE * SPP;
-  private static final int RGB_PLANES_COUNT = EFF_SIZE_C * SIZE_Z * SIZE_T;
+  private static final int[] PLANE_SIZE = {
+    SIZE_X[0] * SIZE_Y[0] * FormatTools.getBytesPerPixel(PIXEL_TYPE),
+    SIZE_X[1] * SIZE_Y[1] * FormatTools.getBytesPerPixel(PIXEL_TYPE)
+  };
+  private static final int[] RGB_PLANE_SIZE = {
+    PLANE_SIZE[0] * SPP,
+    PLANE_SIZE[1] * SPP
+  };
+  private static final int[] RGB_PLANES_COUNT = {
+    EFF_SIZE_C * SIZE_Z[0] * SIZE_T,
+    EFF_SIZE_C * SIZE_Z[1] * SIZE_T
+  };
+  private static final int[] PLANES_COUNT = {
+    SPP * RGB_PLANES_COUNT[0],
+    SPP * RGB_PLANES_COUNT[1]
+  };
   private static final int SIZE_C = SPP * EFF_SIZE_C;
-  private static final int PLANES_COUNT = SPP * RGB_PLANES_COUNT;
 
   private static byte[][][] data;
   private static File target;
 
-  private static byte[] makeImg() {
-    byte[] img = new byte[RGB_PLANE_SIZE];
+  private static byte[] makeImg(int size) {
+    byte[] img = new byte[size];
     for (int i = 0; i < img.length; i++) {
       img[i] = (byte) (256 * Math.random());
     }
@@ -99,17 +111,18 @@ public class BioImgFactoryTest {
     IMetadata meta = service.createOMEXMLMetadata();
     for (int s = 0; s < SERIES_COUNT; s++) {
       MetadataTools.populateMetadata(meta, s, null, LITTLE_ENDIAN, DIM_ORDER,
-        ptString, SIZE_X, SIZE_Y, SIZE_Z, SIZE_C, SIZE_T, SPP);
+        ptString, SIZE_X[s], SIZE_Y[s], SIZE_Z[s], SIZE_C, SIZE_T, SPP);
     }
     IFormatWriter writer = new ImageWriter();
     writer.setMetadataRetrieve(meta);
     writer.setId(target.getAbsolutePath());
     writer.setInterleaved(false);
-    data = new byte[SERIES_COUNT][RGB_PLANES_COUNT][RGB_PLANE_SIZE];
+    data = new byte[SERIES_COUNT][][];
     for (int s = 0; s < SERIES_COUNT; s++) {
+      data[s] = new byte[RGB_PLANES_COUNT[s]][];
       writer.setSeries(s);
-      for (int p = 0; p < RGB_PLANES_COUNT; p++) {
-        byte[] img = makeImg();
+      for (int p = 0; p < RGB_PLANES_COUNT[s]; p++) {
+        byte[] img = makeImg(RGB_PLANE_SIZE[s]);
         writer.saveBytes(p, img);
         data[s][p] = img;
       }
@@ -122,8 +135,8 @@ public class BioImgFactoryTest {
     int sampleIdx = planeIdx % SPP;
     byte[] expBytes = Arrays.copyOfRange(
         data[seriesIdx][rgbPlaneIdx],
-        PLANE_SIZE * sampleIdx,
-        PLANE_SIZE * (sampleIdx + 1)
+        PLANE_SIZE[seriesIdx] * sampleIdx,
+        PLANE_SIZE[seriesIdx] * (sampleIdx + 1)
     );
     assertEquals(p.getDimensionOrder().toString(), DIM_ORDER);
     ArraySlice a = p.getPixelData();
@@ -131,10 +144,10 @@ public class BioImgFactoryTest {
     assertEquals(a.getLittleEndian().booleanValue(), LITTLE_ENDIAN);
     List<Integer> shape = a.getShape();
     assertEquals(shape.size(), DIM_ORDER.length());
-    assertEquals(shape.get(0).intValue(), SIZE_X);
-    assertEquals(shape.get(1).intValue(), SIZE_Y);
+    assertEquals(shape.get(0).intValue(), SIZE_X[seriesIdx]);
+    assertEquals(shape.get(1).intValue(), SIZE_Y[seriesIdx]);
     assertEquals(shape.get(2).intValue(), SIZE_C);
-    assertEquals(shape.get(3).intValue(), SIZE_Z);
+    assertEquals(shape.get(3).intValue(), SIZE_Z[seriesIdx]);
     assertEquals(shape.get(4).intValue(), SIZE_T);
     ByteBuffer buffer = a.getData();
     buffer.clear();
@@ -168,7 +181,7 @@ public class BioImgFactoryTest {
         checkPlane(p, s, planeIdx);
         planeIdx++;
       }
-      assertEquals(planeIdx, PLANES_COUNT);
+      assertEquals(planeIdx, PLANES_COUNT[s]);
     }
     iReader.close();
   }

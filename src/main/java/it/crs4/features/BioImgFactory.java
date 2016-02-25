@@ -48,9 +48,11 @@ public class BioImgFactory {
   /** a list containing the size of each dimension (in dimOrder order) */
   protected List<Integer> shape;
 
-  public BioImgFactory(IFormatReader reader) {
-    reader = new ChannelSeparator(reader);
-    this.reader = reader;
+  /**
+   * Populate dimOrder, dimIdx and shape based on the core metadata
+   * for the current series
+   */
+  private void populateVectors() {
     dimOrder = reader.getDimensionOrder();
     if (dimOrder.length() != N_DIM) {
       throw new RuntimeException("the number of dimensions must be " + N_DIM);
@@ -73,13 +75,24 @@ public class BioImgFactory {
     shape = Arrays.asList(s);
   }
 
+  public BioImgFactory(IFormatReader reader) {
+    this.reader = new ChannelSeparator(reader);
+    populateVectors();
+  }
+
   public BioImgPlane build(String name, int no)
       throws FormatException, IOException {
-    return build(name, no, 0, 0, reader.getSizeX(), reader.getSizeY());
+    return build(name, no, 0, 0, -1, -1);
   }
 
   public BioImgPlane build(String name, int no, int x, int y, int w, int h)
       throws FormatException, IOException {
+    if (w < 0) {
+      w = shape.get(dimIdx[0]);
+    }
+    if (h < 0) {
+      h = shape.get(dimIdx[1]);
+    }
     int[] zct = reader.getZCTCoords(no);
     Integer[] offsets = new Integer[N_DIM];
     offsets[dimIdx[0]] = x;
@@ -106,14 +119,14 @@ public class BioImgFactory {
 
   public void writeSeries(int series, String name, String fileName)
       throws FormatException, IOException {
-    writeSeries(series, name, fileName,
-                0, 0, reader.getSizeX(), reader.getSizeY());
+    writeSeries(series, name, fileName, 0, 0, -1, -1);
   }
 
   public void writeSeries(int series, String name, String fileName,
                           int x, int y, int w, int h)
       throws FormatException, IOException {
     reader.setSeries(series);
+    populateVectors();
     DataFileWriter<BioImgPlane> writer = new DataFileWriter<BioImgPlane>(
       new SpecificDatumWriter<BioImgPlane>(BioImgPlane.class)
     );
