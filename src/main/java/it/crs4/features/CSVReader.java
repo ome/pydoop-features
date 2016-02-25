@@ -29,7 +29,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 
-class CSVReader {
+public class CSVReader {
 
   private BufferedReader reader;
   private String delimiter;
