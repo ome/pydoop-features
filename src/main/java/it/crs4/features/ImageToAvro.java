@@ -20,7 +20,16 @@
 
 package it.crs4.features;
 
+import java.io.File;
+
 import loci.formats.ImageReader;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.ParseException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,14 +42,36 @@ public final class ImageToAvro {
 
   private ImageToAvro() {}
 
-  public static void main(String[] args) throws Exception {
-    if (args.length == 0) {
-      System.err.println("Usage: java ImageToAvro IMG_FILE");
-      return;
-    }
-    String fn = args[0];
-    String name = PathTools.stripext(PathTools.basename(fn));
+  private static CommandLine parseCmdLine(Options opts, String[] args)
+      throws ParseException {
+    opts.addOption("o", "outdir", true, "write avro files to this dir");
+    CommandLineParser parser = new GnuParser();
+    return parser.parse(opts, args);
+  }
 
+  public static void main(String[] args) throws Exception {
+    Options opts = new Options();
+    CommandLine cmd = null;
+    try {
+      cmd = parseCmdLine(opts, args);
+    } catch (ParseException e) {
+      System.err.println("ERROR: " + e.getMessage());
+      System.exit(1);
+    }
+    String fn = null;
+    try {
+      fn = cmd.getArgs()[0];
+    } catch (ArrayIndexOutOfBoundsException e) {
+      HelpFormatter fmt = new HelpFormatter();
+      fmt.printHelp("java ImageToAvro IMG_FILE", opts);
+      System.exit(2);
+    }
+    String outDirName = null;
+    if (cmd.hasOption("outdir")) {
+      outDirName = cmd.getOptionValue("outdir");
+    }
+
+    String name = PathTools.stripext(PathTools.basename(fn));
     ImageReader reader = new ImageReader();
     reader.setId(fn);
     LOGGER.info("Reading from {}", fn);
@@ -56,7 +87,7 @@ public final class ImageToAvro {
       } else {
         seriesName = String.format("%s_%d", name, i);
       }
-      outFn = seriesName + ".avro";
+      outFn = new File(outDirName, seriesName + ".avro").getPath();
       factory.setSeries(i);
       factory.writeSeries(seriesName, outFn);
       LOGGER.info("Writing to {}", outFn);
