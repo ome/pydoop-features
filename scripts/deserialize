@@ -23,6 +23,7 @@ import os
 import warnings
 import argparse
 from contextlib import closing
+import errno
 
 try:
     from pyavroc import AvroFileReader
@@ -58,7 +59,8 @@ def main(argv):
     try:
         os.makedirs(args.out_dir)
     except OSError as e:
-        sys.exit('Cannot create output dir: %s' % e)
+        if e.errno != errno.EEXIST:
+            sys.exit('Cannot create output dir: %s' % e)
     for p in iterplanes(args.avro_file):
         pixels = p.get_xy()
         out_tag = '%s-z%04d-c%04d-t%04d' % (p.name, p.z, p.c, p.t)

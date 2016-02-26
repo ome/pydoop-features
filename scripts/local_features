@@ -1,0 +1,92 @@
+#!/usr/bin/env python
+
+# BEGIN_COPYRIGHT
+#
+# Copyright (C) 2014-2015 CRS4.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not
+# use this file except in compliance with the License. You may obtain a copy
+# of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# END_COPYRIGHT
+
+"""\
+Non-distributed feature calculation with WND-CHARM.
+
+Read image planes from an Avro container created with the serialize
+script (which runs it.crs4.features.ImageToAvro.java), compute feature
+vectors with WND-CHARM and store them to an output Avro container.
+
+In order to write output records, this program needs the Avro output
+schema (the input one is not needed because it's embedded in the
+container). If you build the project with Maven, the required schema
+file will be generated as src/main/avro/Signatures.avsc.
+"""
+import sys
+import os
+import warnings
+import argparse
+import errno
+
+try:
+    from pyavroc import AvroFileReader, AvroFileWriter
+except ImportError:
+    from pyavroc_emu import AvroFileReader, AvroFileWriter
+    warnings.warn("pyavroc not found, using standard avro lib\n")
+
+from bioimg import BioImgPlane
+from feature_calc import calc_features, to_avro
+
+
+def make_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('in_fn', metavar='AVRO_CONTAINER',
+                        help='avro input file with serialized img planes')
+    parser.add_argument('schema_fn', metavar='AVRO_SCHEMA_FILE',
+                        help='avro schema file for writing feature vectors')
+    parser.add_argument('-o', '--out-dir', metavar='DIR', default=os.getcwd())
+    parser.add_argument('-v', '--verbose', action='store_true')
+    return parser
+
+
+def main(argv):
+    parser = make_parser()
+    args = parser.parse_args(argv)
+    try:
+        os.makedirs(args.out_dir)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            sys.exit('Cannot create output dir: %s' % e)
+    with open(args.schema_fn) as f:
+        out_schema = f.read()
+    tag, ext = os.path.splitext(os.path.basename(args.in_fn))
+    out_fn = os.path.join(args.out_dir, '%s_features%s' % (tag, ext))
+    if args.verbose:
+        print 'writing to %s' % out_fn
+    with open(out_fn, 'w') as fout:
+        writer = AvroFileWriter(fout, out_schema)
+        with open(args.in_fn) as fin:
+            reader = AvroFileReader(fin)
+            for r in reader:
+                p = BioImgPlane(r)
+                pixels = p.get_xy()
+                plane_tag = '%s-z%04d-c%04d-t%04d' % (p.name, p.z, p.c, p.t)
+                if args.verbose:
+                    print '  processing %s' % plane_tag
+                features = calc_features(pixels, plane_tag)
+                out_rec = to_avro(features)
+                out_rec['plane_tag'] = plane_tag
+                writer.write(out_rec)
+        writer.close()
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
