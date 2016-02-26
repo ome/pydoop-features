@@ -69,6 +69,14 @@ public final class ImageToAvro {
     String outDirName = null;
     if (cmd.hasOption("outdir")) {
       outDirName = cmd.getOptionValue("outdir");
+      File outDir = new File(outDirName);
+      if (!outDir.exists()) {
+        boolean ret = outDir.mkdirs();
+        if (!ret) {
+          System.err.format("ERROR: can't create %s\n", outDirName);
+          System.exit(3);
+        }
+      }
     }
 
     String name = PathTools.stripext(PathTools.basename(fn));
@@ -82,11 +90,7 @@ public final class ImageToAvro {
     String seriesName;
     String outFn;
     for (int i = 0; i < seriesCount; i++) {
-      if (seriesCount <= 1) {
-        seriesName = name;
-      } else {
-        seriesName = String.format("%s_%d", name, i);
-      }
+      seriesName = String.format("%s_%d", name, i);
       outFn = new File(outDirName, seriesName + ".avro").getPath();
       factory.setSeries(i);
       factory.writeSeries(seriesName, outFn);
