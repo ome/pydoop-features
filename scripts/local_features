@@ -53,6 +53,8 @@ def make_parser():
     parser.add_argument('schema_fn', metavar='AVRO_SCHEMA_FILE',
                         help='avro schema file for writing feature vectors')
     parser.add_argument('-o', '--out-dir', metavar='DIR', default=os.getcwd())
+    parser.add_argument('-l', '--long', action='store_true',
+                        help='extract WND-CHARM\'s "long" features set')
     parser.add_argument('-v', '--verbose', action='store_true')
     return parser
 
@@ -81,7 +83,7 @@ def main(argv):
                 plane_tag = '%s-z%04d-c%04d-t%04d' % (p.name, p.z, p.c, p.t)
                 if args.verbose:
                     print '  processing %s' % plane_tag
-                features = calc_features(pixels, plane_tag)
+                features = calc_features(pixels, plane_tag, long=args.long)
                 out_rec = to_avro(features)
                 out_rec['plane_tag'] = plane_tag
                 writer.write(out_rec)
