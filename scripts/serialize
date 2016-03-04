@@ -16,5 +16,5 @@ if [ ! -e ${PKG[0]} ]; then
     popd
     PKG=( "${REPO_ROOT}"/target/pydoop-features-*.jar )
 fi
-echo "package file: ${PKG[0]}"
+
 java -cp "${PKG[0]}" it.crs4.features.ImageToAvro "$@"
