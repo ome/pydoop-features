@@ -135,6 +135,12 @@
     </dependency>
     <dependency>
       <groupId>org.apache.avro</groupId>
+      <artifactId>avro-mapred</artifactId>
+      <version>1.7.7</version>
+      <classifier>hadoop2</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.avro</groupId>
       <artifactId>avro-tools</artifactId>
       <version>1.7.7</version>
     </dependency>
