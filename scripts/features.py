@@ -23,8 +23,8 @@ import pydoop.mapreduce.api as api
 import pydoop.mapreduce.pipes as pp
 from pydoop.avrolib import AvroContext
 
-from bioimg import BioImgPlane
-from feature_calc import calc_features, to_avro
+from pyfeatures.bioimg import BioImgPlane
+from pyfeatures.feature_calc import calc_features, to_avro
 
 
 class Mapper(api.Mapper):

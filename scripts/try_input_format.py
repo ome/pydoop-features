@@ -25,7 +25,7 @@ import pydoop.mapreduce.pipes as pp
 from pydoop.avrolib import AvroContext
 import pydoop.hdfs as hdfs
 
-from bioimg import BioImgPlane
+from pyfeatures.bioimg import BioImgPlane
 
 
 DUMP_DIR = 'bioimg.dump.dir'

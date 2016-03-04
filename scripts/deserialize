@@ -28,12 +28,12 @@ import errno
 try:
     from pyavroc import AvroFileReader
 except ImportError:
-    from pyavroc_emu import AvroFileReader
+    from pyfeatures.pyavroc_emu import AvroFileReader
     warnings.warn("pyavroc not found, using standard avro lib\n")
 import numpy as np
 from libtiff import TIFF
 
-from bioimg import BioImgPlane
+from pyfeatures.bioimg import BioImgPlane
 
 
 def make_parser():

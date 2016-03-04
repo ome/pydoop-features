@@ -39,11 +39,11 @@ import errno
 try:
     from pyavroc import AvroFileReader, AvroFileWriter
 except ImportError:
-    from pyavroc_emu import AvroFileReader, AvroFileWriter
+    from pyfeatures.pyavroc_emu import AvroFileReader, AvroFileWriter
     warnings.warn("pyavroc not found, using standard avro lib\n")
 
-from bioimg import BioImgPlane
-from feature_calc import calc_features, to_avro
+from pyfeatures.bioimg import BioImgPlane
+from pyfeatures.feature_calc import calc_features, to_avro
 
 
 def make_parser():

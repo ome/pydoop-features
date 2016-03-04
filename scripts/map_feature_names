@@ -13,7 +13,7 @@ import re
 import operator
 
 import numpy as np
-from feature_calc import calc_features
+from pyfeatures.feature_calc import calc_features
 
 PATTERN = re.compile(r"[ \(\)\[\]-]+")
 PY_FN = "feature_names_map.py"
