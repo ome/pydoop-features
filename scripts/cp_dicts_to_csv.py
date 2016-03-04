@@ -44,13 +44,13 @@ for bn in sorted(ls):
             print '  z:', z
             z = int(z)
             res = eval(res)
-            res['ImageNumber'] = str(z+1)
-            res['Group_Index'] = str(z+1)
+            res['ImageNumber'] = str(z + 1)
+            res['Group_Index'] = str(z + 1)
             for t in TAGS[1:]:
                 print '  writing %s data' % t
                 data = res.pop(t)
                 for d in data:
-                    d['ImageNumber'] = str(z+1)
+                    d['ImageNumber'] = str(z + 1)
                     header, values = zip(*d.iteritems())
                     if not HEADER_WRITTEN[t]:
                         OUTFS[t].write(ser(header))

@@ -16,8 +16,6 @@
 #
 # END_COPYRIGHT
 
-# TODO: move this code to a package
-
 import itertools
 import operator
 
@@ -77,8 +75,8 @@ class BioImgPlane(object):
         self.t = self.pixel_data.offsets[self.i_t]
 
     def __check_dim_order(self):
-        if (len(self.dimension_order) != len(self.BASE_DIM_ORDER) or
-            set(self.dimension_order) != set(self.BASE_DIM_ORDER)):
+        if ((len(self.dimension_order) != len(self.BASE_DIM_ORDER) or
+             set(self.dimension_order) != set(self.BASE_DIM_ORDER))):
             raise ValueError('dimension order must be a permutation of %r' %
                              self.BASE_DIM_ORDER)
 
