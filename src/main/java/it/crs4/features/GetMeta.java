@@ -1,4 +1,4 @@
-package it.crs4.pydoop;
+package it.crs4.features;
 
 import java.io.IOException;
 import java.net.URI;
