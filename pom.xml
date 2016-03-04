@@ -84,11 +84,6 @@
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>
           <appendAssemblyId>false</appendAssemblyId>
-          <archive>
-            <manifest>
-              <mainClass>it.crs4.features.ImageToAvro</mainClass>
-            </manifest>
-          </archive>
         </configuration>
         <executions>
           <execution>
