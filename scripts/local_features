@@ -24,12 +24,8 @@ Non-distributed feature calculation with WND-CHARM.
 Read image planes from an Avro container created with the serialize
 script (which runs it.crs4.features.ImageToAvro.java), compute feature
 vectors with WND-CHARM and store them to an output Avro container.
-
-In order to write output records, this program needs the Avro output
-schema (the input one is not needed because it's embedded in the
-container). If you build the project with Maven, the required schema
-file will be generated as src/main/avro/Signatures.avsc.
 """
+
 import sys
 import os
 import warnings
@@ -44,14 +40,13 @@ except ImportError:
 
 from pyfeatures.bioimg import BioImgPlane
 from pyfeatures.feature_calc import calc_features, to_avro
+from pyfeatures.schema import Signatures as out_schema
 
 
 def make_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('in_fn', metavar='AVRO_CONTAINER',
                         help='avro input file with serialized img planes')
-    parser.add_argument('schema_fn', metavar='AVRO_SCHEMA_FILE',
-                        help='avro schema file for writing feature vectors')
     parser.add_argument('-o', '--out-dir', metavar='DIR', default=os.getcwd())
     parser.add_argument('-l', '--long', action='store_true',
                         help='extract WND-CHARM\'s "long" features set')
@@ -67,8 +62,6 @@ def main(argv):
     except OSError as e:
         if e.errno != errno.EEXIST:
             sys.exit('Cannot create output dir: %s' % e)
-    with open(args.schema_fn) as f:
-        out_schema = f.read()
     tag, ext = os.path.splitext(os.path.basename(args.in_fn))
     out_fn = os.path.join(args.out_dir, '%s_features%s' % (tag, ext))
     if args.verbose:
