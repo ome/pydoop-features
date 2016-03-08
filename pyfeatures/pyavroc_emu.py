@@ -24,6 +24,7 @@ class AvroFileWriter(DataFileWriter):
 
 
 class AvroDeserializer(object):
+
     def __init__(self, schema_str):
         schema = avro.schema.parse(schema_str)
         self.reader = DatumReader(schema)
