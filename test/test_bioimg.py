@@ -34,6 +34,11 @@ def make_random_values(dtype, size):
         return np.random.randint(info.min, info.max, size)
 
 
+def make_random_array(dtype, deltas):
+    rv = make_random_values(dtype, reduce(operator.mul, deltas))
+    return rv.astype(dtype).reshape(tuple(deltas))
+
+
 class TestArraySlice(unittest.TestCase):
 
     def setUp(self):
@@ -59,7 +64,6 @@ class TestArraySlice(unittest.TestCase):
         self.shape = [32, 16, 2, 3, 4]
         self.offsets = [4, 8, 1, 2, 1]
         self.deltas = [10, 6, 1, 1, 2]
-        self.size = reduce(operator.mul, self.deltas)
 
     def runTest(self):
         record = {
@@ -70,9 +74,7 @@ class TestArraySlice(unittest.TestCase):
         for c in self.cases:
             record["dtype"] = c["dtype"]
             record["little_endian"] = c["little_endian"]
-            a = make_random_values(
-                c["np_dtype"], self.size
-            ).astype(c["np_dtype"]).reshape(tuple(self.deltas))
+            a = make_random_array(c["np_dtype"], self.deltas)
             record["data"] = a.tostring()
             sl = bioimg.ArraySlice(record)
             self.assertEqual(sl.shape, self.shape)
@@ -81,15 +83,57 @@ class TestArraySlice(unittest.TestCase):
             self.assertTrue(np.array_equal(sl.data, a))
 
 
+class TestBioImgPlane(TestArraySlice):
+
+    def setUp(self):
+        super(TestBioImgPlane, self).setUp()
+        c = self.cases[0]
+        self.pixel_data = {
+            "shape": self.shape,
+            "offsets": self.offsets,
+            "deltas": self.deltas,  # not a single plane, exception expected
+            "dtype": c["dtype"],
+            "little_endian": c["little_endian"],
+            "data": make_random_array(c["np_dtype"], self.deltas).tostring(),
+        }
+        self.record = {
+            "name": "foo",
+            "dimension_order": "XYTZC",
+            "pixel_data": self.pixel_data,
+        }
+        self.np_dtype = c["np_dtype"]
+        self.zct = dict(zip(
+            self.record["dimension_order"][2:], self.offsets[2:]
+        ))
+
+    def runTest(self):
+        self.assertRaises(ValueError, bioimg.BioImgPlane, self.record)
+        deltas = self.record["pixel_data"]["deltas"]
+        deltas[-1] = 1
+        self.record["pixel_data"]["data"] = make_random_array(
+            self.np_dtype, deltas
+        ).tostring()
+        plane = bioimg.BioImgPlane(self.record)
+        self.assertEqual(plane.name, self.record["name"])
+        self.assertEqual(plane.dimension_order, self.record["dimension_order"])
+        self.assertEqual(plane.z, self.zct["Z"])
+        self.assertEqual(plane.c, self.zct["C"])
+        self.assertEqual(plane.t, self.zct["T"])
+
+
 def load_tests(loader, tests, pattern):
-    test_cases = (TestArraySlice,)
+    test_cases = (TestArraySlice, TestBioImgPlane)
     suite = unittest.TestSuite()
     for tc in test_cases:
         suite.addTests(loader.loadTestsFromTestCase(tc))
     return suite
 
 
-if __name__ == '__main__':
+def main():
     suite = load_tests(unittest.defaultTestLoader, None, None)
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)
+
+
+if __name__ == '__main__':
+    main()
