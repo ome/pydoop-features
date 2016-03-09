@@ -80,12 +80,12 @@ class TestToAvro(unittest.TestCase):
         for long in False, True:
             sigs = calc_features(self.a, self.plane_tag, long=long)
             rec = to_avro(sigs)
-            rec["plane_tag"] = self.plane_tag
             try:
                 pyavroc_emu.AvroSerializer(Signatures).serialize(rec)
             except AvroException as e:
                 self.fail("Could not serialize record: %s" % e)
             self.assertEquals(rec["version"], sigs.feature_set_version)
+            self.assertEquals(rec["plane_tag"], self.plane_tag)
             fmap = dict(izip(sigs.feature_names, sigs.values))
             for fname, (vname, idx) in FEATURE_NAMES.iteritems():
                 v = fmap.get(fname)

@@ -33,4 +33,5 @@ def to_avro(signatures):
     for vname, tuples in rec.iteritems():
         rec[vname] = [_[1] for _ in sorted(tuples)]
     rec["version"] = signatures.feature_set_version
+    rec["plane_tag"] = signatures.basename
     return rec

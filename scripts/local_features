@@ -78,7 +78,6 @@ def main(argv):
                     print '  processing %s' % plane_tag
                 features = calc_features(pixels, plane_tag, long=args.long)
                 out_rec = to_avro(features)
-                out_rec['plane_tag'] = plane_tag
                 writer.write(out_rec)
         writer.close()
 
