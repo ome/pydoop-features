@@ -3,14 +3,7 @@ from itertools import izip
 from wndcharm.FeatureVector import FeatureVector
 from wndcharm.PyImageMatrix import PyImageMatrix
 
-import avro.schema
-
 from pyfeatures.feature_names import FEATURE_NAMES
-from pyfeatures.schema import Signatures
-
-
-VECTOR_NAMES = [_.name for _ in avro.schema.parse(Signatures).fields
-                if isinstance(_.type, avro.schema.ArraySchema)]
 
 
 def calc_features(img_arr, plane_tag, long=False):
@@ -26,7 +19,7 @@ def calc_features(img_arr, plane_tag, long=False):
 
 
 def to_avro(signatures):
-    rec = dict((_, []) for _ in VECTOR_NAMES)
+    rec = dict((_[0], []) for _ in FEATURE_NAMES.itervalues())
     for fname, value in izip(signatures.feature_names, signatures.values):
         vname, idx = FEATURE_NAMES[fname]
         rec[vname].append((idx, value))
