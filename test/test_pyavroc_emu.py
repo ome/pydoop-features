@@ -23,6 +23,7 @@ import os
 
 import pyfeatures.pyavroc_emu as pyavroc_emu
 import pyfeatures.schema as schema
+from pyfeatures.feature_names import FEATURE_NAMES
 
 
 class Base(unittest.TestCase):
@@ -36,21 +37,19 @@ class Base(unittest.TestCase):
             "deltas": [4, 4, 1, 1, 1],
             "data": ''.join(chr(_) for _ in xrange(16))
         }
+        signatures = {
+            "version": "3.2",
+            "plane_tag": "img_0-z0000-c0000-t0000",
+        }
+        for vname, idx in FEATURE_NAMES.itervalues():
+            signatures.setdefault(vname, []).append(float(idx))
         self.record_map = {
             "BioImgPlane": {
                 "name": "foo",
                 "dimension_order": "XYZCT",
                 "pixel_data": array_slice,
             },
-            "Signatures": {
-                "feature_names": ["one", "two", "three"],
-                "values": [.1, .2, .3],
-                "name": "bar",
-                "feature_set_version": "0.1",
-                "source_filepath": "/foo/bar",
-                "auxiliary_feature_storage": "storage",
-                "plane_tag": "tag",
-            }
+            "Signatures": signatures
         }
 
 

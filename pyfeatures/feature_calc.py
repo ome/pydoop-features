@@ -1,5 +1,9 @@
+from itertools import izip
+
 from wndcharm.FeatureVector import FeatureVector
 from wndcharm.PyImageMatrix import PyImageMatrix
+
+from pyfeatures.feature_names import FEATURE_NAMES
 
 
 def calc_features(img_arr, plane_tag, long=False):
@@ -15,17 +19,12 @@ def calc_features(img_arr, plane_tag, long=False):
 
 
 def to_avro(signatures):
-    try:
-        rec = {
-            'feature_names': signatures.feature_names,
-            'values': signatures.values
-        }
-    except AttributeError:
-        raise RuntimeError('"feature_names" and "values" are required attrs')
-    for k in ('name', 'feature_set_version', 'source_filepath',
-              'auxiliary_feature_storage'):
-        try:
-            rec[k] = getattr(signatures, k)
-        except AttributeError:
-            pass
+    rec = dict((_[0], []) for _ in FEATURE_NAMES.itervalues())
+    for fname, value in izip(signatures.feature_names, signatures.values):
+        vname, idx = FEATURE_NAMES[fname]
+        rec[vname].append((idx, value))
+    for vname, tuples in rec.iteritems():
+        rec[vname] = [_[1] for _ in sorted(tuples)]
+    rec["version"] = signatures.feature_set_version
+    rec["plane_tag"] = signatures.basename
     return rec
