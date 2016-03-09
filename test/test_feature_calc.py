@@ -21,25 +21,31 @@ import tempfile
 import shutil
 import os
 from contextlib import closing
+from itertools import izip
 
 import numpy as np
 from libtiff import TIFF
+from avro.schema import AvroException
 from wndcharm.FeatureVector import FeatureVector
 
-from pyfeatures.feature_calc import calc_features
+from pyfeatures.feature_calc import calc_features, to_avro
+from pyfeatures.feature_names import FEATURE_NAMES
+import pyfeatures.pyavroc_emu as pyavroc_emu
+from pyfeatures.schema import Signatures
 
 
 SHAPE = (8, 8)
 DTYPE = np.uint8
 
 
-def make_random_tiff(filename):
+def make_random_data(filename=None):
     info = np.iinfo(DTYPE)
     a = np.random.randint(
         info.min, info.max, SHAPE[0] * SHAPE[1]
     ).astype(DTYPE).reshape(SHAPE)
-    with closing(TIFF.open(filename, mode="w")) as fo:
-        fo.write_image(a)
+    if filename is not None:
+        with closing(TIFF.open(filename, mode="w")) as fo:
+            fo.write_image(a)
     return a
 
 
@@ -48,7 +54,7 @@ class TestFeatureCalc(unittest.TestCase):
     def setUp(self):
         self.wd = tempfile.mkdtemp(prefix="pyfeatures_")
         self.fn = os.path.join(self.wd, "img.tiff")
-        self.a = make_random_tiff(self.fn)
+        self.a = make_random_data(filename=self.fn)
         self.plane_tag = "img_0-z0000-c0000-t0000"
 
     def tearDown(self):
@@ -64,8 +70,34 @@ class TestFeatureCalc(unittest.TestCase):
                 self.assertEquals(getattr(sigs, name), getattr(exp_sigs, name))
 
 
+class TestToAvro(unittest.TestCase):
+
+    def setUp(self):
+        self.a = make_random_data()
+        self.plane_tag = "img_0-z0000-c0000-t0000"
+
+    def runTest(self):
+        for long in False, True:
+            sigs = calc_features(self.a, self.plane_tag, long=long)
+            rec = to_avro(sigs)
+            rec["plane_tag"] = self.plane_tag
+            try:
+                pyavroc_emu.AvroSerializer(Signatures).serialize(rec)
+            except AvroException as e:
+                self.fail("Could not serialize record: %s" % e)
+            self.assertEquals(rec["version"], sigs.feature_set_version)
+            fmap = dict(izip(sigs.feature_names, sigs.values))
+            for fname, (vname, idx) in FEATURE_NAMES.iteritems():
+                v = fmap.get(fname)
+                if v is None:
+                    assert not long
+                    self.assertEqual(len(rec[vname]), 0)
+                else:
+                    self.assertEqual(rec[vname][idx], v)
+
+
 def load_tests(loader, tests, pattern):
-    test_cases = (TestFeatureCalc,)
+    test_cases = (TestFeatureCalc, TestToAvro)
     suite = unittest.TestSuite()
     for tc in test_cases:
         suite.addTests(loader.loadTestsFromTestCase(tc))
