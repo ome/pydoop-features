@@ -6,14 +6,19 @@ from wndcharm.PyImageMatrix import PyImageMatrix
 from pyfeatures.feature_names import FEATURE_NAMES
 
 
-def calc_features(img_arr, plane_tag, long=False):
-    assert len(img_arr.shape) == 2
-    pychrm_matrix = PyImageMatrix()
-    pychrm_matrix.allocate(img_arr.shape[1], img_arr.shape[0])
-    numpy_matrix = pychrm_matrix.as_ndarray()
-    numpy_matrix[:] = img_arr
+def get_image_matrix(img_array):
+    if len(img_array.shape) != 2:
+        raise ValueError("array must be two-dimensional")
+    image_matrix = PyImageMatrix()
+    image_matrix.allocate(img_array.shape[1], img_array.shape[0])
+    numpy_matrix = image_matrix.as_ndarray()
+    numpy_matrix[:] = img_array
+    return image_matrix
+
+
+def calc_features(img_array, plane_tag, long=False):
     signatures = FeatureVector(basename=plane_tag, long=long)
-    signatures.original_px_plane = pychrm_matrix
+    signatures.original_px_plane = get_image_matrix(img_array)
     signatures.GenerateFeatures(write_to_disk=False)
     return signatures
 
