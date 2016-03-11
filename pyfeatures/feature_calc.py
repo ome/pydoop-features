@@ -16,11 +16,25 @@ def get_image_matrix(img_array):
     return image_matrix
 
 
-def calc_features(img_array, plane_tag, long=False):
-    signatures = FeatureVector(basename=plane_tag, long=long)
-    signatures.original_px_plane = get_image_matrix(img_array)
-    signatures.GenerateFeatures(write_to_disk=False)
-    return signatures
+def calc_features(img_array, plane_tag, long=False, w=None, h=None):
+    if len(img_array.shape) != 2:
+        raise ValueError("array must be two-dimensional")
+    H, W = img_array.shape
+    if w is None or w > W:
+        w = W
+    if h is None or h > H:
+        h = H
+    if w < 1 or h < 1:
+        raise ValueError("smallest tile size is 1 x 1")
+    for i in xrange(0, H, h):
+        for j in xrange(0, W, w):
+            tile = img_array[i: i + h, j: j + w]
+            signatures = FeatureVector(basename=plane_tag, long=long)
+            signatures.original_px_plane = get_image_matrix(tile)
+            signatures.GenerateFeatures(write_to_disk=False)
+            signatures.x, signatures.y = j, i
+            signatures.h, signatures.w = tile.shape
+            yield signatures
 
 
 def to_avro(signatures):
@@ -32,4 +46,6 @@ def to_avro(signatures):
         rec[vname] = [_[1] for _ in sorted(tuples)]
     rec["version"] = signatures.feature_set_version
     rec["plane_tag"] = signatures.basename
+    for k in "x", "y", "w", "h":
+        rec[k] = getattr(signatures, k)
     return rec

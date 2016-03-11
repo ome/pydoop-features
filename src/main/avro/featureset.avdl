@@ -6,6 +6,10 @@ protocol FeatureSet {
   record Signatures {
     string version;
     string plane_tag;
+    int w;
+    int h;
+    int x;
+    int y;
     array<double> chebyshev_coefficients;
     array<double> chebyshev_coefficients_chebyshev;
     array<double> chebyshev_coefficients_edge;

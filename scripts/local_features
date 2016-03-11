@@ -50,6 +50,10 @@ def make_parser():
     parser.add_argument('-o', '--out-dir', metavar='DIR', default=os.getcwd())
     parser.add_argument('-l', '--long', action='store_true',
                         help='extract WND-CHARM\'s "long" features set')
+    parser.add_argument('-W', '--width', type=int, metavar="INT",
+                        help='tile width (default = image width)')
+    parser.add_argument('-H', '--height', type=int, metavar="INT",
+                        help='tile height (default = image height)')
     parser.add_argument('-v', '--verbose', action='store_true')
     return parser
 
@@ -76,9 +80,10 @@ def main(argv):
                 plane_tag = '%s-z%04d-c%04d-t%04d' % (p.name, p.z, p.c, p.t)
                 if args.verbose:
                     print '  processing %s' % plane_tag
-                features = calc_features(pixels, plane_tag, long=args.long)
-                out_rec = to_avro(features)
-                writer.write(out_rec)
+                for fv in calc_features(pixels, plane_tag, long=args.long,
+                                        w=args.width, h=args.height):
+                    out_rec = to_avro(fv)
+                    writer.write(out_rec)
         writer.close()
 
 

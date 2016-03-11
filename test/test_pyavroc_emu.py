@@ -40,6 +40,7 @@ class Base(unittest.TestCase):
         signatures = {
             "version": "3.2",
             "plane_tag": "img_0-z0000-c0000-t0000",
+            "x": 0, "y": 0, "w": 400, "h": 300,
         }
         for vname, idx in FEATURE_NAMES.itervalues():
             signatures.setdefault(vname, []).append(float(idx))

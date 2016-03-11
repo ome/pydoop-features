@@ -28,6 +28,10 @@ protocol FeatureSet {
   record Signatures {
     string version;
     string plane_tag;
+    int w;
+    int h;
+    int x;
+    int y;
 """
 AVRO_IDL_FOOTER = """\
   }
@@ -84,10 +88,10 @@ def generate_avro(names_map):
 
 
 def main():
-    img = get_random_img(48, 48)
+    img = get_random_img(8, 8)
     print "computing features for random img"
-    short_names = calc_features(img, "short", long=False).feature_names
-    long_names = calc_features(img, "long", long=True).feature_names
+    short_names = calc_features(img, "short", long=False).next().feature_names
+    long_names = calc_features(img, "long", long=True).next().feature_names
     N_SHORT, N_LONG = len(short_names), len(long_names)
     short_names, long_names = set(short_names), set(long_names)
     assert len(short_names) == N_SHORT and len(long_names) == N_LONG
