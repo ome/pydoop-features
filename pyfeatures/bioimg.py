@@ -59,15 +59,28 @@ class BioImgPlane(object):
 
     BASE_DIM_ORDER = 'XYZCT'
 
+    def __swap_xy(self, avro_record):
+        self.i_x, self.i_y = self.i_y, self.i_x
+        self.indices[0], self.indices[1] = self.i_x, self.i_y
+        avro_record['dimension_order'] = ''.join(
+            _[1] for _ in sorted(zip(self.indices, self.BASE_DIM_ORDER))
+        )
+        for k in 'shape', 'offsets', 'deltas':
+            v = avro_record['pixel_data'][k]
+            v[0], v[1] = v[1], v[0]
+
     def __init__(self, avro_record):
         r = avro_record
+        self.indices = [
+            r['dimension_order'].index(_) for _ in self.BASE_DIM_ORDER
+        ]  # FIXME: optimize this
+        self.i_x, self.i_y, self.i_z, self.i_c, self.i_t = self.indices
+        if self.i_x < self.i_y:
+            # map y to rows and x to columns so that xy slices are img planes
+            self.__swap_xy(r)
         self.name = r['name']
         self.dimension_order = r['dimension_order']
         self.__check_dim_order()
-        self.indices = [
-            self.dimension_order.index(_) for _ in self.BASE_DIM_ORDER
-        ]  # FIXME: optimize this
-        self.i_x, self.i_y, self.i_z, self.i_c, self.i_t = self.indices
         self.pixel_data = ArraySlice(r['pixel_data'])
         self.__check_is_plane()
         self.z = self.pixel_data.offsets[self.i_z]

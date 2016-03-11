@@ -82,7 +82,6 @@ class Mapper(api.Mapper):
         img_list = []
         for p, tag in zip(self.img_set, CHANNEL_TAGS):
             pixels = p.get_xy()
-            pixels = pixels.reshape(pixels.shape[1], pixels.shape[0])
             im = Image.fromarray(pixels)
             out_fn = 'z%04d_%s' % (p.z, tag)
             im.save(out_fn)
