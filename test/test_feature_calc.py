@@ -128,6 +128,39 @@ class TestToAvro(unittest.TestCase):
                 else:
                     self.assertEqual(rec[vname][idx], v)
 
+    def test_tiling(self):
+        a = make_random_data()
+        w, h = 3, 4
+        s = list(calc_features(a, self.plane_tag, w=w, h=h))
+        self.assertEqual(len(s), 6)
+        r = [to_avro(_) for _ in s]
+        try:
+            [pyavroc_emu.AvroSerializer(Signatures).serialize(_) for _ in r]
+        except AvroException as e:
+            self.fail("Could not serialize record: %s" % e)
+        for i in xrange(6):
+            self.assertEquals(r[i]["version"], s[i].feature_set_version)
+            self.assertEquals(r[i]["plane_tag"], self.plane_tag)
+            fmap = dict(izip(s[i].feature_names, s[i].values))
+            for fname, (vname, idx) in FEATURE_NAMES.iteritems():
+                v = fmap.get(fname)
+                if v is None:
+                    self.assertEqual(len(r[i][vname]), 0)
+                else:
+                    self.assertEqual(r[i][vname][idx], v)
+        self.assertEqual(
+            (r[0]["x"], r[0]["y"], r[0]["w"], r[0]["h"]), (0, 0, 3, 4))
+        self.assertEqual(
+            (r[1]["x"], r[1]["y"], r[1]["w"], r[1]["h"]), (3, 0, 3, 4))
+        self.assertEqual(
+            (r[2]["x"], r[2]["y"], r[2]["w"], r[2]["h"]), (6, 0, 2, 4))
+        self.assertEqual(
+            (r[3]["x"], r[3]["y"], r[3]["w"], r[3]["h"]), (0, 4, 3, 2))
+        self.assertEqual(
+            (r[4]["x"], r[4]["y"], r[4]["w"], r[4]["h"]), (3, 4, 3, 2))
+        self.assertEqual(
+            (r[5]["x"], r[5]["y"], r[5]["w"], r[5]["h"]), (6, 4, 2, 2))
+
 
 def load_tests(loader, tests, pattern):
     test_cases = (TestFeatureCalc, TestToAvro)
