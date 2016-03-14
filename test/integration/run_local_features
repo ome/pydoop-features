@@ -1,12 +1,76 @@
-#!/bin/bash
+#!/usr/bin/env python
 
-if [ "$#" == 0 ]; then
-    echo "USAGE: ./$(basename $0) IMG_FILE"
-    exit 2
-fi
-img_fn=$1
-img_bn=$(basename ${img_fn})
-avro_fn="${img_bn%.*}.avro"
+import os
+import subprocess as sp
+import tempfile
+from itertools import izip
 
-./serialize ${img_fn}
-python local_features.py ../${avro_fn}
+from wndcharm.FeatureVector import FeatureVector
+
+import pyfeatures.pyavroc_emu as pyavroc_emu
+from pyfeatures.feature_names import FEATURE_NAMES
+
+
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.dirname(os.path.dirname(THIS_DIR))
+IMG_FN = os.path.join(THIS_DIR, "37117_small.tif")
+
+
+def run_serialize(img_fn, out_dir):
+    prog = os.path.join(REPO_ROOT, "scripts", "serialize")
+    sp.check_call([prog, "-o", out_dir, img_fn])
+
+
+def run_deserialize(avro_fn, out_dir, img=True):
+    prog = os.path.join(REPO_ROOT, "scripts", "deserialize")
+    sp.check_call([prog, "--img", avro_fn, out_dir])
+
+
+def run_local_features(avro_fn, out_dir, long=False, w=None, h=None):
+    prog = os.path.join(REPO_ROOT, "scripts", "local_features")
+    args = [prog, "-v", "-o", out_dir, avro_fn]
+    if long:
+        args.append("-l")
+    if w is not None:
+        args.extend("-W", int(w))
+    if h is not None:
+        args.extend("-H", int(h))
+    sp.check_call(args)
+
+
+def check_features(img_fn, avro_out_fn, long=False):
+    sigs = FeatureVector(source_filepath=img_fn, long=long)
+    sigs.GenerateFeatures(write_to_disk=False)
+    fmap = dict(izip(sigs.feature_names, sigs.values))
+    with open(avro_out_fn) as f:
+        records = [_ for _ in pyavroc_emu.AvroFileReader(f)]
+    assert len(records) == 1
+    rec = records[0]
+    for fname, (vname, idx) in FEATURE_NAMES.iteritems():
+        v = fmap.get(fname)
+        if v is None:
+            assert not long
+            assert len(rec[vname]) == 0
+        else:
+            assert rec[vname][idx] == v
+
+
+def main():
+    wd = tempfile.mkdtemp(prefix="pyfeatures_")
+    print "working dir: %r" % (wd,)
+    avro_input_dir = os.path.join(wd, "avro_in")
+    avro_output_dir = os.path.join(wd, "avro_out")
+    img_output_dir = os.path.join(wd, "planes")
+    run_serialize(IMG_FN, avro_input_dir)
+    for bn in os.listdir(avro_input_dir):
+        fn = os.path.join(avro_input_dir, bn)
+        run_deserialize(fn, img_output_dir)  # for visual inspection
+        run_local_features(fn, avro_output_dir)
+        out_bn = "_features".join(os.path.splitext(bn))
+        out_fn = os.path.join(avro_output_dir, out_bn)
+        assert os.path.isfile(out_fn)
+        check_features(IMG_FN, out_fn)
+
+
+if __name__ == "__main__":
+    main()
