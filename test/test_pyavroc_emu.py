@@ -47,7 +47,9 @@ class Base(unittest.TestCase):
         self.record_map = {
             "BioImgPlane": {
                 "name": "foo",
+                "img_path": "/bar/spam.tif",
                 "dimension_order": "XYZCT",
+                "series": 0,
                 "pixel_data": array_slice,
             },
             "Signatures": signatures

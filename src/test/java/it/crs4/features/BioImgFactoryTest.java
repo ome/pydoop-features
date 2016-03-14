@@ -139,6 +139,7 @@ public class BioImgFactoryTest {
         PLANE_SIZE[seriesIdx] * (sampleIdx + 1)
     );
     assertEquals(p.getDimensionOrder().toString(), DIM_ORDER);
+    assertEquals(p.getSeries().intValue(), seriesIdx);
     ArraySlice a = p.getPixelData();
     assertEquals(a.getDtype(), EXPECTED_DTYPE);
     assertEquals(a.getLittleEndian().booleanValue(), LITTLE_ENDIAN);
@@ -162,7 +163,7 @@ public class BioImgFactoryTest {
     LOGGER.info("Image file: {}", imgFn);
     ImageReader iReader = new ImageReader();
     iReader.setId(imgFn);
-    BioImgFactory factory = new BioImgFactory(iReader);
+    BioImgFactory factory = new BioImgFactory(iReader, imgFn);
     assertEquals(factory.getSeriesCount(), SERIES_COUNT);
     for (int s = 0; s < SERIES_COUNT; s++) {
       LOGGER.info("Series: {}", s);

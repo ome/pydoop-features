@@ -43,6 +43,7 @@ public class BioImgFactory {
   private static final int N_DIM = DEFAULT_ORDER.length();
 
   protected IFormatReader reader;
+  protected String imgPath;
   protected String dimOrder;
 
   /** current series */
@@ -90,9 +91,10 @@ public class BioImgFactory {
    * being changed by the caller. In particular, reader.setSeries
    * must not be called (call setSeries on the BioImgFactory instead).
    */
-  public BioImgFactory(IFormatReader reader) {
+  public BioImgFactory(IFormatReader reader, String imgPath) {
     this.reader = new ChannelSeparator(reader);
     setSeries(this.reader.getSeries());
+    this.imgPath = imgPath;
   }
 
   public int getSeries() {
@@ -137,7 +139,7 @@ public class BioImgFactory {
     a.setOffsets(Arrays.asList(offsets));
     a.setDeltas(Arrays.asList(deltas));
     a.setData(ByteBuffer.wrap(reader.openBytes(no, x, y, w, h)));
-    return new BioImgPlane(name, dimOrder, a);
+    return new BioImgPlane(name, imgPath, dimOrder, series, a);
   }
 
   public void writeSeries(String name, String fileName)
