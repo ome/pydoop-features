@@ -45,6 +45,7 @@ public final class ImageToAvro {
   private static CommandLine parseCmdLine(Options opts, String[] args)
       throws ParseException {
     opts.addOption("o", "outdir", true, "write avro files to this dir");
+    opts.addOption("t", "tag", true, "base tag for the avro output file");
     CommandLineParser parser = new GnuParser();
     return parser.parse(opts, args);
   }
@@ -78,22 +79,28 @@ public final class ImageToAvro {
         }
       }
     }
+    String tag = null;
+    if (cmd.hasOption("tag")) {
+      tag = cmd.getOptionValue("tag");
+    } else {
+      tag = PathTools.stripext(PathTools.basename(fn));
+    }
 
-    String name = PathTools.stripext(PathTools.basename(fn));
+    String imgPath = (new File(fn)).getAbsolutePath();
     ImageReader reader = new ImageReader();
     reader.setId(fn);
     LOGGER.info("Reading from {}", fn);
-    BioImgFactory factory = new BioImgFactory(reader);
+    BioImgFactory factory = new BioImgFactory(reader, imgPath);
     int seriesCount = factory.getSeriesCount();
 
     // FIXME: add support for XY slicing
-    String seriesName;
     String outFn;
+    String name;
     for (int i = 0; i < seriesCount; i++) {
-      seriesName = String.format("%s_%d", name, i);
-      outFn = new File(outDirName, seriesName + ".avro").getPath();
+      name = String.format("%s_%d", tag, i);
+      outFn = new File(outDirName, name + ".avro").getPath();
       factory.setSeries(i);
-      factory.writeSeries(seriesName, outFn);
+      factory.writeSeries(name, outFn);
       LOGGER.info("Writing to {}", outFn);
     }
     reader.close();

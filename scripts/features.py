@@ -32,9 +32,10 @@ class Mapper(api.Mapper):
     def map(self, ctx):
         p = BioImgPlane(ctx.value)
         pixels = p.get_xy()
-        plane_tag = '%s-z%04d-c%04d-t%04d' % (p.name, p.z, p.c, p.t)
         # TODO: support tiling
-        out_rec = to_avro(calc_features(pixels, plane_tag))
+        out_rec = to_avro(calc_features(pixels, p.name))
+        for name in 'img_path', 'series', 'z', 'c', 't':
+            out_rec[name] = getattr(p, name)
         ctx.emit(None, out_rec)
 
 

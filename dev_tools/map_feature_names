@@ -27,11 +27,10 @@ protocol FeatureSet {
 
   record Signatures {
     string version;
-    string plane_tag;
-    int w;
-    int h;
-    int x;
-    int y;
+    string name;
+    string img_path;
+    int series, z, c, t;
+    int x, y, w, h;
 """
 AVRO_IDL_FOOTER = """\
   }

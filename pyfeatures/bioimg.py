@@ -78,8 +78,8 @@ class BioImgPlane(object):
         if self.i_x < self.i_y:
             # map y to rows and x to columns so that xy slices are img planes
             self.__swap_xy(r)
-        self.name = r['name']
-        self.dimension_order = r['dimension_order']
+        for k in 'name', 'img_path', 'dimension_order', 'series':
+            setattr(self, k, r[k])
         self.__check_dim_order()
         self.pixel_data = ArraySlice(r['pixel_data'])
         self.__check_is_plane()

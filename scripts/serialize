@@ -2,11 +2,6 @@
 
 set -eu
 
-if [ "$#" == 0 ]; then
-    echo "USAGE: ./$(basename "$0") IMG_FILE"
-    exit 2
-fi
-
 SCRIPTS_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd; cd - >/dev/null)
 REPO_ROOT=$(dirname "${SCRIPTS_DIR}")
 PKG=( "${REPO_ROOT}"/target/pydoop-features-*.jar )

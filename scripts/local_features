@@ -77,12 +77,13 @@ def main(argv):
             for r in reader:
                 p = BioImgPlane(r)
                 pixels = p.get_xy()
-                plane_tag = '%s-z%04d-c%04d-t%04d' % (p.name, p.z, p.c, p.t)
                 if args.verbose:
-                    print '  processing %s' % plane_tag
-                for fv in calc_features(pixels, plane_tag, long=args.long,
-                                        w=args.width, h=args.height):
+                    print '  processing', [p.z, p.c, p.t]
+                kw = {'long': args.long, 'w': args.width, 'h': args.height}
+                for fv in calc_features(pixels, p.name, **kw):
                     out_rec = to_avro(fv)
+                    for name in 'img_path', 'series', 'z', 'c', 't':
+                        out_rec[name] = getattr(p, name)
                     writer.write(out_rec)
         writer.close()
 

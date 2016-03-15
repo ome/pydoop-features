@@ -68,7 +68,7 @@ public class BioImgRecordReader
       throw new RuntimeException("FormatException: " + e.getMessage());
     }
     planesPerSeries = reader.getImageCount();
-    factory = new BioImgFactory(reader);
+    factory = new BioImgFactory(reader, absPathName);
     name = PathTools.stripext(PathTools.basename(absPathName));
     planeCounter = 0;
   }
