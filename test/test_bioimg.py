@@ -98,7 +98,9 @@ class TestBioImgPlane(TestArraySlice):
         }
         self.record = {
             "name": "foo",
+            "img_path": "/bar/foo.tif",
             "dimension_order": "XYTZC",
+            "series": 0,
             "pixel_data": self.pixel_data,
         }
         self.np_dtype = c["np_dtype"]
@@ -114,8 +116,8 @@ class TestBioImgPlane(TestArraySlice):
             self.np_dtype, deltas
         ).tostring()
         plane = bioimg.BioImgPlane(self.record)
-        self.assertEqual(plane.name, self.record["name"])
-        self.assertEqual(plane.dimension_order, self.record["dimension_order"])
+        for k in "name", "img_path", "dimension_order", "series":
+            self.assertEqual(getattr(plane, k), self.record[k])
         self.assertEqual(plane.z, self.zct["Z"])
         self.assertEqual(plane.c, self.zct["C"])
         self.assertEqual(plane.t, self.zct["T"])

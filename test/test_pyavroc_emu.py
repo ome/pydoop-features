@@ -29,27 +29,32 @@ from pyfeatures.feature_names import FEATURE_NAMES
 class Base(unittest.TestCase):
 
     def setUp(self):
+        name = "img_0"
+        img_path = "/bar/spam/img_0.tif"
+        series = z = c = t = 0
         array_slice = {
             "dtype": "UINT8",
             "little_endian": True,
             "shape": [4, 4, 1, 2, 3],
-            "offsets": [0, 0, 0, 0, 0],
+            "offsets": [0, 0, z, c, t],
             "deltas": [4, 4, 1, 1, 1],
             "data": ''.join(chr(_) for _ in xrange(16))
         }
         signatures = {
             "version": "3.2",
-            "plane_tag": "img_0-z0000-c0000-t0000",
+            "name": name,
+            "img_path": img_path,
+            "series": series, "z": z, "c": c, "t": t,
             "x": 0, "y": 0, "w": 400, "h": 300,
         }
         for vname, idx in FEATURE_NAMES.itervalues():
             signatures.setdefault(vname, []).append(float(idx))
         self.record_map = {
             "BioImgPlane": {
-                "name": "foo",
-                "img_path": "/bar/spam.tif",
+                "name": name,
+                "img_path": img_path,
                 "dimension_order": "XYZCT",
-                "series": 0,
+                "series": series,
                 "pixel_data": array_slice,
             },
             "Signatures": signatures

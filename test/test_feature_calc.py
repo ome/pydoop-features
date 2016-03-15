@@ -51,11 +51,20 @@ def dump_to_tiff(ndarray, filename):
         fo.write_image(ndarray)
 
 
-class TestFeatureCalc(unittest.TestCase):
+class Base(unittest.TestCase):
 
     def setUp(self):
+        self.name = "img_0"
+        self.img_path = "/foo/img_0.tif"
+        self.series = 0
+        self.z = self.c = self.t = 0
+
+
+class TestFeatureCalc(Base):
+
+    def setUp(self):
+        super(TestFeatureCalc, self).setUp()
         self.wd = tempfile.mkdtemp(prefix="pyfeatures_")
-        self.plane_tag = "img_0-z0000-c0000-t0000"
 
     def tearDown(self):
         shutil.rmtree(self.wd)
@@ -63,7 +72,7 @@ class TestFeatureCalc(unittest.TestCase):
     def test_no_tiling(self):
         a = make_random_data()
         for long in False, True:
-            all_sigs = list(calc_features(a, self.plane_tag, long=long))
+            all_sigs = list(calc_features(a, self.name, long=long))
             self.assertEqual(len(all_sigs), 1)
             sigs = all_sigs[0]
             self.assertEqual((sigs.x, sigs.y, sigs.w, sigs.h), (0, 0, W, H))
@@ -73,7 +82,7 @@ class TestFeatureCalc(unittest.TestCase):
     def test_tiling(self):
         a = make_random_data()
         w, h = 3, 4
-        s = list(calc_features(a, self.plane_tag, w=w, h=h))
+        s = list(calc_features(a, self.name, w=w, h=h))
         self.assertEqual(len(s), 6)
         self.assertEqual((s[0].x, s[0].y, s[0].w, s[0].h), (0, 0, 3, 4))
         self.assertFeaturesEqual(s[0], self.__get_exp_features(a[:4, :3]))
@@ -99,24 +108,26 @@ class TestFeatureCalc(unittest.TestCase):
         return fv.GenerateFeatures(write_to_disk=False)
 
 
-class TestToAvro(unittest.TestCase):
+class TestToAvro(Base):
 
     def setUp(self):
-        self.plane_tag = "img_0-z0000-c0000-t0000"
+        super(TestToAvro, self).setUp()
 
     def test_no_tiling(self):
         a = make_random_data()
         for long in False, True:
-            all_sigs = list(calc_features(a, self.plane_tag, long=long))
+            all_sigs = list(calc_features(a, self.name, long=long))
             self.assertEqual(len(all_sigs), 1)
             sigs = all_sigs[0]
             rec = to_avro(sigs)
+            for k in 'img_path', 'series', 'z', 'c', 't':
+                rec[k] = getattr(self, k)
             try:
                 pyavroc_emu.AvroSerializer(Signatures).serialize(rec)
             except AvroException as e:
                 self.fail("Could not serialize record: %s" % e)
             self.assertEquals(rec["version"], sigs.feature_set_version)
-            self.assertEquals(rec["plane_tag"], self.plane_tag)
+            self.assertEquals(rec["name"], self.name)
             self.assertEquals((rec["x"], rec["y"]), (0, 0))
             self.assertEquals((rec["h"], rec["w"]), a.shape)
             fmap = dict(izip(sigs.feature_names, sigs.values))
@@ -131,16 +142,19 @@ class TestToAvro(unittest.TestCase):
     def test_tiling(self):
         a = make_random_data()
         w, h = 3, 4
-        s = list(calc_features(a, self.plane_tag, w=w, h=h))
+        s = list(calc_features(a, self.name, w=w, h=h))
         self.assertEqual(len(s), 6)
         r = [to_avro(_) for _ in s]
+        for i in xrange(6):
+            for k in 'img_path', 'series', 'z', 'c', 't':
+                r[i][k] = getattr(self, k)
         try:
             [pyavroc_emu.AvroSerializer(Signatures).serialize(_) for _ in r]
         except AvroException as e:
             self.fail("Could not serialize record: %s" % e)
         for i in xrange(6):
             self.assertEquals(r[i]["version"], s[i].feature_set_version)
-            self.assertEquals(r[i]["plane_tag"], self.plane_tag)
+            self.assertEquals(r[i]["name"], self.name)
             fmap = dict(izip(s[i].feature_names, s[i].values))
             for fname, (vname, idx) in FEATURE_NAMES.iteritems():
                 v = fmap.get(fname)
