@@ -19,12 +19,13 @@ python set_bf_ver.py
 pip install avro
 pip install libtiff
 
-pushd pydoop-features
-mvn clean compile assembly:single
-popd
-
 pushd wnd-charm
 ./build.sh
 make install
+python setup.py install
+popd
+
+pushd pydoop-features
+mvn clean compile assembly:single
 python setup.py install
 popd
