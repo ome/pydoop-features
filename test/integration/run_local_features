@@ -52,7 +52,7 @@ def check_features(img_fn, avro_out_fn, long=False):
             assert not long
             assert len(rec[vname]) == 0
         else:
-            assert rec[vname][idx] == v
+            assert abs(rec[vname][idx] - v) <= 1e-7
 
 
 def main():

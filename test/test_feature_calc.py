@@ -98,8 +98,10 @@ class TestFeatureCalc(Base):
         self.assertFeaturesEqual(s[5], self.__get_exp_features(a[4:, 6:]))
 
     def assertFeaturesEqual(self, fv1, fv2):
-        for name in "feature_names", "values", "feature_set_version":
+        for name in "feature_names", "feature_set_version":
             self.assertEquals(getattr(fv1, name), getattr(fv2, name))
+        for v1, v2 in izip(fv1.values, fv2.values):
+            self.assertAlmostEquals(v1, v2)
 
     def __get_exp_features(self, a, long=False):
         fn = os.path.join(self.wd, "img.tiff")
