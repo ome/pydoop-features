@@ -21,15 +21,26 @@ def get_data(fn):
 
 
 def plot_data(data, img_fn):
+    plt.close("all")
+    fig, (ax1, ax2) = plt.subplots(2, sharex=True)
+    # --
     xlabels = data["shapes"]
     x = range(len(xlabels))
-    plt.plot(x, data["t"])
-    ymin, ymax = plt.ylim()
-    plt.ylim((0, ymax))
-    plt.xticks(x, xlabels)
-    plt.xlabel("tile shape")
-    plt.ylabel("total running time (s)")
-    plt.savefig(img_fn, dpi=300)
+    ax1.plot(x, data["t"])
+    xmin, xmax, ymin, ymax = ax1.axis()
+    ax1.axis((xmin, xmax, 0, ymax))
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(xlabels)
+    ax1.set_xlabel("tile shape")
+    ax1.set_ylabel("total running time (s)")
+    # --
+    ax2.plot(x, data["err"])
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(xlabels)
+    ax2.set_xlabel("tile shape")
+    ax2.set_ylabel("error")
+    # --
+    fig.savefig(img_fn, dpi=300)
 
 
 def make_parser():
