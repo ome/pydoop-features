@@ -2,8 +2,6 @@ FROM centos:centos6
 MAINTAINER simone.leo@crs4.it
 
 COPY install_maven.sh /
-COPY set_bf_ver.py /
-COPY install_pydoop_features.sh /
 
 RUN yum -y update
 RUN yum -y install centos-release-SCL epel-release
@@ -21,4 +19,16 @@ RUN yum -y install \
     tar
 RUN echo ". /opt/rh/python27/enable" >/etc/profile.d/python.sh
 RUN bash install_maven.sh
+RUN useradd -m features
+
+USER features
+ENV HOME /home/features
+COPY install_pydoop_features.sh /home/features
+COPY set_bf_ver.py /home/features
+WORKDIR /home/features
+RUN echo 'export PATH="/home/features/.local/bin:${PATH}"' >> ~/.bashrc
+RUN git config --global user.name "features"
+RUN git config --global user.email "features@crs4.it"
 RUN bash install_pydoop_features.sh
+
+CMD ["bash"]
