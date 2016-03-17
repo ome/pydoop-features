@@ -77,7 +77,7 @@ def main(argv):
     ref_v = list(calc_features(pixels, p.name, long=args.long))[0].values
     delta = time.time() - start
     with open(args.out_fn, "w") as fo:
-        fo.write("W\tH\t\tELAPSED_T\tERROR\n")
+        fo.write("W\tH\tELAPSED_T\tERROR\n")
         fo.write("%d\t%d\t%.5f\t%.5f\n" % (W, H, delta, 0))
         for w, h in product(get_divisors(W, low=args.min_width),
                             get_divisors(H, low=args.min_height)):
