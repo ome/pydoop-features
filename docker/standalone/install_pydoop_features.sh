@@ -6,12 +6,17 @@ set -u
 
 easy_install pip
 
-git clone https://github.com/openmicroscopy/bioformats.git
-git clone https://github.com/wnd-charm/wnd-charm.git
-git clone https://github.com/simleo/pydoop-features.git
+# clone dependencies with depth=1 to speed things up
+git clone --depth=1 --branch='metadata/merge/trigger' \
+    https://github.com/snoopycrimecop/bioformats.git
+git clone --depth=1 --branch='master' \
+    https://github.com/wnd-charm/wnd-charm.git
+
+git clone --branch='master' https://github.com/simleo/pydoop-features.git
 
 pushd bioformats
-git checkout metadata
+# the Maven build needs to find a tag, but we've cut the history to depth 1
+git tag -a v5.1.8-METADATA-MERGE -m "tagging v5.1.8-METADATA-MERGE"
 mvn install -DskipTests
 popd
 
