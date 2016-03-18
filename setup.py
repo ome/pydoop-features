@@ -45,6 +45,10 @@ setup(
     description=DESCRIPTION,
     url=URL,
     classifiers=CLASSIFIERS,
-    packages=["pyfeatures"],
+    packages=[
+        "pyfeatures",
+        "pyfeatures.app",
+    ],
+    scripts=["scripts/pyfeatures"],
     cmdclass={"build": Build}
 )
