@@ -22,8 +22,8 @@ def run_serialize(img_fn, out_dir):
 
 
 def run_deserialize(avro_fn, out_dir, img=True):
-    prog = os.path.join(REPO_ROOT, "scripts", "deserialize")
-    sp.check_call([prog, "--img", avro_fn, out_dir])
+    args = ["pyfeatures", "deserialize", "--img", avro_fn, out_dir]
+    sp.check_call(args)
 
 
 def run_local_features(avro_fn, out_dir, long=False, w=None, h=None):
