@@ -21,5 +21,9 @@ RUN bash install_maven.sh
 COPY set_bf_ver.py /
 COPY install_pydoop_features.sh /
 RUN bash install_pydoop_features.sh
+RUN useradd -m features
+
+USER features
+ENV HOME /home/features
 
 ENTRYPOINT ["/usr/local/bin/pyfeatures"]
