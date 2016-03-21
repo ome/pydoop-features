@@ -4,7 +4,9 @@ set -ex
 
 set -u
 
-easy_install pip
+curl -o get-pip.py https://bootstrap.pypa.io/get-pip.py
+python get-pip.py
+pip install avro libtiff
 
 # clone dependencies with depth=1 to speed things up
 git clone --depth=1 --branch='metadata/merge/trigger' \
@@ -21,8 +23,6 @@ mvn install -DskipTests
 popd
 
 python set_bf_ver.py
-pip install avro
-pip install libtiff
 
 pushd wnd-charm
 ./build.sh
@@ -31,6 +31,12 @@ python setup.py install
 popd
 
 pushd pydoop-features
-mvn clean compile assembly:single
 python setup.py install
 popd
+
+cat <<EOF >/usr/local/bin/pyfeatures
+#!/bin/bash
+. /etc/profile
+/opt/rh/python27/root/usr/bin/pyfeatures "\$@"
+EOF
+chmod +x /usr/local/bin/pyfeatures

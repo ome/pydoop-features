@@ -1,10 +1,6 @@
 FROM centos:centos6
 MAINTAINER simone.leo@crs4.it
 
-COPY install_maven.sh /
-COPY set_bf_ver.py /
-COPY install_pydoop_features.sh /
-
 RUN yum -y update
 RUN yum -y install centos-release-SCL epel-release
 RUN yum -y install \
@@ -20,5 +16,10 @@ RUN yum -y install \
     swig \
     tar
 RUN echo ". /opt/rh/python27/enable" >/etc/profile.d/python.sh
+COPY install_maven.sh /
 RUN bash install_maven.sh
+COPY set_bf_ver.py /
+COPY install_pydoop_features.sh /
 RUN bash install_pydoop_features.sh
+
+ENTRYPOINT ["/usr/local/bin/pyfeatures"]
