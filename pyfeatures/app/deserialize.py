@@ -45,7 +45,7 @@ def iterplanes(avro_file):
             yield BioImgPlane(r)
 
 
-def run(args):
+def run(args, extra_argv=None):
     try:
         os.makedirs(args.out_dir)
     except OSError as e:
