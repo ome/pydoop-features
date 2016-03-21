@@ -26,7 +26,7 @@ import importlib
 
 VERSION = "NOT_TAGGED_YET"
 SUBMOD_NAMES = [
-    # "calc",
+    "calc",
     "deserialize",
     # "serialize",
 ]
