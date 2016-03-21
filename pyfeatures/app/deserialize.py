@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # BEGIN_COPYRIGHT
 #
 # Copyright (C) 2014-2016 CRS4.
@@ -18,10 +16,13 @@
 #
 # END_COPYRIGHT
 
+"""\
+Deserialize BioImgPlane records.
+"""
+
 import sys
 import os
 import warnings
-import argparse
 from contextlib import closing
 import errno
 
@@ -36,15 +37,6 @@ from libtiff import TIFF
 from pyfeatures.bioimg import BioImgPlane
 
 
-def make_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('avro_file', metavar='AVRO_FILE')
-    parser.add_argument('out_dir', metavar='OUT_DIR')
-    parser.add_argument('--img', action='store_true',
-                        help='write images instead of .npy dumps')
-    return parser
-
-
 # no schema needed for deserialization
 def iterplanes(avro_file):
     with open(avro_file, 'rb') as f:
@@ -53,9 +45,7 @@ def iterplanes(avro_file):
             yield BioImgPlane(r)
 
 
-def main(argv):
-    parser = make_parser()
-    args = parser.parse_args(argv)
+def run(args, extra_argv=None):
     try:
         os.makedirs(args.out_dir)
     except OSError as e:
@@ -71,7 +61,14 @@ def main(argv):
         else:
             out_fn = os.path.join(args.out_dir, '%s.npy' % out_tag)
             np.save(out_fn, pixels)
+    return 0
 
 
-if __name__ == '__main__':
-    main(sys.argv[1:])
+def add_parser(subparsers):
+    parser = subparsers.add_parser("deserialize", description=__doc__)
+    parser.add_argument('avro_file', metavar='AVRO_FILE')
+    parser.add_argument('out_dir', metavar='OUT_DIR')
+    parser.add_argument('--img', action='store_true',
+                        help='write images instead of .npy dumps')
+    parser.set_defaults(func=run)
+    return parser
