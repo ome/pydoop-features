@@ -17,8 +17,8 @@ IMG_FN = os.path.join(THIS_DIR, "37117_small.tif")
 
 
 def run_serialize(img_fn, out_dir):
-    prog = os.path.join(REPO_ROOT, "scripts", "serialize")
-    sp.check_call([prog, "-o", out_dir, img_fn])
+    args = ["pyfeatures", "serialize", "-o", out_dir, img_fn]
+    sp.check_call(args)
 
 
 def run_deserialize(avro_fn, out_dir, img=True):

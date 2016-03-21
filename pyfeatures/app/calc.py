@@ -27,7 +27,6 @@ vectors with WND-CHARM and store them to an output Avro container.
 import sys
 import os
 import warnings
-import argparse
 import errno
 
 try:
@@ -41,7 +40,7 @@ from pyfeatures.feature_calc import calc_features, to_avro
 from pyfeatures.schema import Signatures as out_schema
 
 
-def run(args):
+def run(args, extra_argv=None):
     try:
         os.makedirs(args.out_dir)
     except OSError as e:

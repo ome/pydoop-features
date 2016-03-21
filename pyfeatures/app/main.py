@@ -28,7 +28,7 @@ VERSION = "NOT_TAGGED_YET"
 SUBMOD_NAMES = [
     "calc",
     "deserialize",
-    # "serialize",
+    "serialize",
 ]
 
 
@@ -48,5 +48,5 @@ def make_parser():
 
 def main(argv=None):
     parser = make_parser()
-    args = parser.parse_args(argv)
-    args.func(args)
+    args, extra_argv = parser.parse_known_args(argv)
+    args.func(args, extra_argv=extra_argv)
