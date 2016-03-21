@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # BEGIN_COPYRIGHT
 #
 # Copyright (C) 2014-2016 CRS4.
@@ -29,7 +27,6 @@ vectors with WND-CHARM and store them to an output Avro container.
 import sys
 import os
 import warnings
-import argparse
 import errno
 
 try:
@@ -43,24 +40,7 @@ from pyfeatures.feature_calc import calc_features, to_avro
 from pyfeatures.schema import Signatures as out_schema
 
 
-def make_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('in_fn', metavar='AVRO_CONTAINER',
-                        help='avro input file with serialized img planes')
-    parser.add_argument('-o', '--out-dir', metavar='DIR', default=os.getcwd())
-    parser.add_argument('-l', '--long', action='store_true',
-                        help='extract WND-CHARM\'s "long" features set')
-    parser.add_argument('-W', '--width', type=int, metavar="INT",
-                        help='tile width (default = image width)')
-    parser.add_argument('-H', '--height', type=int, metavar="INT",
-                        help='tile height (default = image height)')
-    parser.add_argument('-v', '--verbose', action='store_true')
-    return parser
-
-
-def main(argv):
-    parser = make_parser()
-    args = parser.parse_args(argv)
+def run(args, extra_argv=None):
     try:
         os.makedirs(args.out_dir)
     except OSError as e:
@@ -86,7 +66,20 @@ def main(argv):
                         out_rec[name] = getattr(p, name)
                     writer.write(out_rec)
         writer.close()
+    return 0
 
 
-if __name__ == '__main__':
-    main(sys.argv[1:])
+def add_parser(subparsers):
+    parser = subparsers.add_parser("calc", description=__doc__)
+    parser.add_argument('in_fn', metavar='AVRO_CONTAINER',
+                        help='avro input file with serialized img planes')
+    parser.add_argument('-o', '--out-dir', metavar='DIR', default=os.getcwd())
+    parser.add_argument('-l', '--long', action='store_true',
+                        help='extract WND-CHARM\'s "long" features set')
+    parser.add_argument('-W', '--width', type=int, metavar="INT",
+                        help='tile width (default = image width)')
+    parser.add_argument('-H', '--height', type=int, metavar="INT",
+                        help='tile height (default = image height)')
+    parser.add_argument('-v', '--verbose', action='store_true')
+    parser.set_defaults(func=run)
+    return parser
