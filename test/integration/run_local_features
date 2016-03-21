@@ -17,17 +17,18 @@ IMG_FN = os.path.join(THIS_DIR, "37117_small.tif")
 
 
 def run_serialize(img_fn, out_dir):
-    args = ["pyfeatures", "serialize", "-o", out_dir, img_fn]
-    sp.check_call(args)
+    prog = os.path.join(REPO_ROOT, "scripts", "serialize")
+    sp.check_call([prog, "-o", out_dir, img_fn])
 
 
 def run_deserialize(avro_fn, out_dir, img=True):
-    args = ["pyfeatures", "deserialize", "--img", avro_fn, out_dir]
-    sp.check_call(args)
+    prog = os.path.join(REPO_ROOT, "scripts", "deserialize")
+    sp.check_call([prog, "--img", avro_fn, out_dir])
 
 
-def run_feature_calc(avro_fn, out_dir, long=False, w=None, h=None):
-    args = ["pyfeatures", "calc", "-v", "-o", out_dir, avro_fn]
+def run_local_features(avro_fn, out_dir, long=False, w=None, h=None):
+    prog = os.path.join(REPO_ROOT, "scripts", "local_features")
+    args = [prog, "-v", "-o", out_dir, avro_fn]
     if long:
         args.append("-l")
     if w is not None:
@@ -64,7 +65,7 @@ def main():
     for bn in os.listdir(avro_input_dir):
         fn = os.path.join(avro_input_dir, bn)
         run_deserialize(fn, img_output_dir)  # for visual inspection
-        run_feature_calc(fn, avro_output_dir)
+        run_local_features(fn, avro_output_dir)
         out_bn = "_features".join(os.path.splitext(bn))
         out_fn = os.path.join(avro_output_dir, out_bn)
         assert os.path.isfile(out_fn)
