@@ -22,7 +22,9 @@ package it.crs4.features;
 
 import java.io.File;
 
+import loci.formats.IFormatReader;
 import loci.formats.ImageReader;
+import loci.formats.Memoizer;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -46,6 +48,8 @@ public final class ImageToAvro {
       throws ParseException {
     opts.addOption("o", "outdir", true, "write avro files to this dir");
     opts.addOption("t", "tag", true, "base tag for the avro output file");
+    opts.addOption("w", "memoWait", true, "Memoizer wait (advanced)");
+    opts.addOption("d", "memoDir", true, "Memoizer directory (advanced)");
     CommandLineParser parser = new GnuParser();
     return parser.parse(opts, args);
   }
@@ -86,9 +90,21 @@ public final class ImageToAvro {
       tag = PathTools.stripext(PathTools.basename(fn));
     }
 
+    long memoWait = 0;
+    if (cmd.hasOption("memoWait")) {
+      memoWait = Long.parseLong(cmd.getOptionValue("memoWait"));
+    }
+
     String imgPath = (new File(fn)).getAbsolutePath();
-    ImageReader reader = new ImageReader();
+    IFormatReader reader = new ImageReader();
     reader.setId(fn);
+
+    File memoDir;
+    if (cmd.hasOption("memoDir")) {
+      memoDir = new File(cmd.getOptionValue("memoDir"));
+      reader = new Memoizer(reader, memoWait, memoDir);
+    }
+
     LOGGER.info("Reading from {}", fn);
     BioImgFactory factory = new BioImgFactory(reader, imgPath);
     int seriesCount = factory.getSeriesCount();
