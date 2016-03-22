@@ -4,20 +4,25 @@ set -ex
 
 set -u
 
-easy_install pip
+curl -o get-pip.py https://bootstrap.pypa.io/get-pip.py
+python get-pip.py
+pip install avro libtiff
 
-git clone https://github.com/openmicroscopy/bioformats.git
-git clone https://github.com/wnd-charm/wnd-charm.git
-git clone https://github.com/simleo/pydoop-features.git
+# clone dependencies with depth=1 to speed things up
+git clone --depth=1 --branch='metadata/merge/trigger' \
+    https://github.com/snoopycrimecop/bioformats.git
+git clone --depth=1 --branch='master' \
+    https://github.com/wnd-charm/wnd-charm.git
+
+git clone --branch='master' https://github.com/simleo/pydoop-features.git
 
 pushd bioformats
-git checkout metadata
+# the Maven build needs to find a tag, but we've cut the history to depth 1
+git tag -a v5.1.8-METADATA-MERGE -m "tagging v5.1.8-METADATA-MERGE"
 mvn install -DskipTests
 popd
 
 python set_bf_ver.py
-pip install avro
-pip install libtiff
 
 pushd wnd-charm
 ./build.sh
@@ -26,6 +31,12 @@ python setup.py install
 popd
 
 pushd pydoop-features
-mvn clean compile assembly:single
 python setup.py install
 popd
+
+cat <<EOF >/usr/local/bin/pyfeatures
+#!/bin/bash
+. /etc/profile
+/opt/rh/python27/root/usr/bin/pyfeatures "\$@"
+EOF
+chmod +x /usr/local/bin/pyfeatures
