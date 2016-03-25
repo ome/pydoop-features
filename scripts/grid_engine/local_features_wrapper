@@ -1,0 +1,23 @@
+#!/bin/bash
+
+die() {
+    echo "$1" 1>&2
+    exit 1
+}
+
+[ -z "${SGE_TASK_ID}" ] && die "ERROR: run via qsub"
+[ "$#" == 0 ] && die "USAGE: ./$(basename "$0") BASE_TAG"
+BASE_TAG="$1"
+shift
+
+. "${HOME}"/.bashrc
+env
+
+if [ "${SGE_TASK_ID}" != "undefined" ]; then
+    BASE_TAG="${BASE_TAG}"_$((SGE_TASK_ID - 1))
+fi
+echo "input file: ${BASE_TAG}.avro"
+
+echo -en "START LOCAL_FEATURES " && date +%s
+pyfeatures calc "${BASE_TAG}".avro "$@"
+echo -en "STOP LOCAL_FEATURES " && date +%s
