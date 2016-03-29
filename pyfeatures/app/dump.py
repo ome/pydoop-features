@@ -27,7 +27,9 @@ suitable for very large files.
 import cPickle
 import os
 import pprint
+import shelve
 import warnings
+from contextlib import closing
 
 try:
     from pyavroc import AvroFileReader
@@ -36,28 +38,52 @@ except ImportError:
     warnings.warn("pyavroc not found, using standard avro lib\n")
 
 
-FORMATS = "pickle", "txt"
+FORMATS = "db", "pickle", "txt"
+PROTOCOL = cPickle.HIGHEST_PROTOCOL
 
 
-def iter_records(f, num_records=None):
+def iter_records(f, num_records=None, verbose=False):
     reader = AvroFileReader(f)
     for i, r in enumerate(reader):
+        if verbose:
+            print "record #%d" % i
         if num_records is not None and i >= num_records:
             raise StopIteration
         else:
             yield r
 
 
-def write_records(records, fmt, out_fn):
-    with open(out_fn, "w") as fo:
-        if fmt == "pickle":
-            cPickle.dump(list(records), fo, cPickle.HIGHEST_PROTOCOL)
-        elif fmt == "txt":
+class Writer(object):
+
+    def __init__(self, fmt, out_fn):
+        if fmt not in FORMATS:
+            raise ValueError("Unknown output format: %r" % (fmt,))
+        self.fmt = fmt
+        self.out_fn = out_fn
+
+    def write(self, records):
+        getattr(self, "_write_%s" % self.fmt)(records)
+
+    def _write_db(self, records):
+        try:
+            os.remove(self.out_fn)  # shelve.open does not overwrite
+        except OSError:
+            pass
+        with closing(
+            shelve.open(self.out_fn, flag="n", protocol=PROTOCOL)
+        ) as shelf:
+            for i, r in enumerate(records):
+                shelf[str(i)] = r
+
+    def _write_pickle(self, records):
+        with open(self.out_fn, "w") as fo:
+            cPickle.dump(list(records), fo, PROTOCOL)
+
+    def _write_txt(self, records):
+        with open(self.out_fn, "w") as fo:
             pp = pprint.PrettyPrinter(stream=fo)
             for r in records:
                 pp.pprint(r)
-        else:
-            raise ValueError("Unknown output format: %r" % (fmt,))
 
 
 def add_parser(subparsers):
@@ -68,6 +94,7 @@ def add_parser(subparsers):
     parser.add_argument('-o', '--out-fn', metavar='FILE', help="output file")
     parser.add_argument('-f', '--format', choices=FORMATS, default="txt",
                         metavar="|".join(FORMATS), help="output format")
+    parser.add_argument('-v', '--verbose', action="store_true")
     parser.set_defaults(func=run)
     return parser
 
@@ -77,5 +104,7 @@ def run(args, extra_argv=None):
         tag = os.path.splitext(os.path.basename(args.in_fn))[0]
         args.out_fn = "%s.%s" % (tag, args.format)
     with open(args.in_fn) as f:
-        records = iter_records(f, num_records=args.num_records)
-        write_records(records, args.format, args.out_fn)
+        records = iter_records(
+            f, num_records=args.num_records, verbose=args.verbose
+        )
+        Writer(args.format, args.out_fn).write(records)
