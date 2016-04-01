@@ -1,6 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
+  <!--
+      By default, depend on a standard BF release. To use Hadoop-based
+      tools:
+        1) install BF from https://github.com/simleo/bioformats/tree/hdfs_hacks
+        2) change bio-formats.version to 5.1.0-HDFS
+  -->
+
   <modelVersion>4.0.0</modelVersion>
   <groupId>it.crs4.features</groupId>
   <artifactId>pydoop-features</artifactId>
@@ -10,7 +17,7 @@
   <url>https://github.com/crs4/pydoop-features</url>
 
   <properties>
-    <bio-formats.version>5.1.0-HDFS</bio-formats.version>
+    <bio-formats.version>5.1.8</bio-formats.version>
     <slf4j.version>1.7.7</slf4j.version>
     <log4j.version>1.2.17</log4j.version>
     <hadoop.version>2.6.0</hadoop.version>
@@ -20,6 +27,13 @@
     <!-- checkstyle config -->
     <checkstyle.config.location>${project.basedir}/checkstyle.xml</checkstyle.config.location>
   </properties>
+
+  <repositories>
+    <repository>
+      <id>ome.releases</id>
+      <url>http://artifacts.openmicroscopy.org/artifactory/ome.releases</url>
+    </repository>
+  </repositories>
 
   <build>
     <plugins>
