@@ -28,6 +28,8 @@ VERSION = "NOT_TAGGED_YET"
 SUBMOD_NAMES = [
     "calc",
     "deserialize",
+    "dump",
+    "plot",
     "serialize",
 ]
 
