@@ -30,6 +30,7 @@ before_install:
   - pip install avro
   - pip install flake8
   - pip install libtiff
+  - pip install matplotlib
   - bash .travis/install_wndcharm.sh
 
 install:
@@ -42,3 +43,4 @@ before_script:
 script:
   - mvn test
   - python test/all_tests.py
+  - ./test/integration/run_local_features
