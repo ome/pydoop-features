@@ -1,0 +1,34 @@
+#!/bin/bash
+
+die() {
+    echo "$1" 1>&2
+    exit 1
+}
+
+abspath() {
+    echo "$(pwd)"/"$1"
+}
+
+SERIALIZE_WRAPPER="$(abspath serialize_wrapper)"
+CALC_FEATURES_WRAPPER="$(abspath local_features_wrapper)"
+AVRO_IN_DIR="$(abspath serialize_${RANDOM})"
+
+[ -z "${SGE_TASK_ID}" ] || die "ERROR: do not run via qsub"
+[ "$#" == 0 ] && die "USAGE: ./$(basename "$0") IMAGE_FILE [OPTIONS...]"
+IMAGE_FILE=$(abspath "$1")
+shift
+
+qsub -sync y "${SERIALIZE_WRAPPER}" "${IMAGE_FILE}" -o "${AVRO_IN_DIR}"
+[ $? -ne 0 ] && die "serialize job failed, bailing out"
+
+BASE_TAG=$(basename "${IMAGE_FILE%%.*}")
+N_JOBS=$(find "${AVRO_IN_DIR}" -type f -name "${BASE_TAG}"'*.avro' | wc -l)
+[ "${N_JOBS}" -eq 0 ] && die "no .avro file found for ${IMAGE_FILE}"
+
+
+if [ "${N_JOBS}" -eq 1 ]; then
+    qsub "${CALC_FEATURES_WRAPPER}" "${AVRO_IN_DIR}/${BASE_TAG}" "$@"
+else
+    qsub -t 1-"${N_JOBS}" \
+	"${CALC_FEATURES_WRAPPER}" "${AVRO_IN_DIR}/${BASE_TAG}" "$@"
+fi
