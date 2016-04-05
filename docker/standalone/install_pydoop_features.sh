@@ -6,7 +6,7 @@ set -u
 
 curl -o get-pip.py https://bootstrap.pypa.io/get-pip.py
 python get-pip.py
-pip install avro libtiff
+pip install avro libtiff matplotlib
 
 # clone dependencies with depth=1 to speed things up
 git clone --depth=1 --branch='metadata/merge/trigger' \

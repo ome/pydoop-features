@@ -6,9 +6,11 @@ RUN yum -y install centos-release-SCL epel-release
 RUN yum -y install \
     fftw-devel \
     fftw-static \
+    freetype-devel \
     gcc-c++ \
     git \
     java-1.8.0-openjdk-devel \
+    libpng-devel \
     libtiff-devel \
     python27 \
     python27-devel \
