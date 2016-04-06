@@ -27,7 +27,7 @@ def run_deserialize(avro_fn, out_dir, img=True):
 
 
 def run_feature_calc(avro_fn, out_dir, long=False, w=None, h=None):
-    args = ["pyfeatures", "calc", "-v", "-o", out_dir, avro_fn]
+    args = ["pyfeatures", "calc", "-o", out_dir, avro_fn]
     if long:
         args.append("-l")
     if w is not None:

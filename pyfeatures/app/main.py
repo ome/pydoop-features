@@ -23,6 +23,8 @@ Pyfeatures command line tool.
 import argparse
 import importlib
 
+from .common import log_level
+
 
 VERSION = "NOT_TAGGED_YET"
 SUBMOD_NAMES = [
@@ -41,6 +43,8 @@ def make_parser():
     )
     parser.add_argument('-V', '--version', action='version', version=VERSION,
                         help='print version tag and exit')
+    parser.add_argument('--log-level', metavar="LEVEL", type=log_level,
+                        default="INFO", help="logging level")
     subparsers = parser.add_subparsers(help="sub-commands")
     for n in SUBMOD_NAMES:
         mod = importlib.import_module("%s.%s" % (__package__, n))
