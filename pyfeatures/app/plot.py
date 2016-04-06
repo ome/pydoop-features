@@ -69,10 +69,12 @@ def iter_records(fn):
                 yield r
 
 
-def get_data(fn, axis, feature=None):
+def get_data(fn, axis, feature=None, x=None, y=None):
     other_axes = [_ for _ in AXES if _ != axis]
     data = {}
     for r in iter_records(fn):
+        if (x is not None and r['x'] != x) or (y is not None and r['y'] != y):
+            continue
         k1 = tuple(r[_] for _ in other_axes)
         k2 = (r['x'], r['y'])
         for name, idx in FEATURE_NAMES.itervalues():
@@ -120,6 +122,10 @@ def add_parser(subparsers):
                         help="what to map to the horizontal axis in the plots")
     parser.add_argument("-f", "--feature", metavar="FEATURE", choices=FV_NAMES,
                         help="select only this feature (sub-vector)")
+    parser.add_argument("-x", type=int, metavar="INT",
+                        help="select only tiles with this x coordinate")
+    parser.add_argument("-y", type=int, metavar="INT",
+                        help="select only tiles with this y coordinate")
     parser.add_argument('-o', '--out-dir', metavar='DIR', default=os.getcwd())
     parser.add_argument('-v', '--verbose', action="store_true")
     parser.set_defaults(func=run)
@@ -134,5 +140,6 @@ def run(args, extra_argv=None):
             sys.exit('Cannot create output dir: %s' % e)
     if args.verbose:
         print "getting data..."
-    data = get_data(args.in_fn, args.axis, feature=args.feature)
+    data = get_data(args.in_fn, args.axis, feature=args.feature, x=args.x,
+                    y=args.y)
     plot_data(data, args.axis, args.out_dir, verbose=args.verbose)
