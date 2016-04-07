@@ -25,6 +25,7 @@ suitable for very large files.
 """
 
 import cPickle
+import logging
 import os
 import pprint
 import shelve
@@ -37,16 +38,17 @@ except ImportError:
     from pyfeatures.pyavroc_emu import AvroFileReader
     warnings.warn("pyavroc not found, using standard avro lib\n")
 
+logging.basicConfig(level=logging.INFO)
+
 
 FORMATS = "db", "pickle", "txt"
 PROTOCOL = cPickle.HIGHEST_PROTOCOL
 
 
-def iter_records(f, num_records=None, verbose=False):
+def iter_records(f, logger, num_records=None):
     reader = AvroFileReader(f)
     for i, r in enumerate(reader):
-        if verbose:
-            print "record #%d" % i
+        logger.debug("record #%d", i)
         if num_records is not None and i >= num_records:
             raise StopIteration
         else:
@@ -94,17 +96,16 @@ def add_parser(subparsers):
     parser.add_argument('-o', '--out-fn', metavar='FILE', help="output file")
     parser.add_argument('-f', '--format', choices=FORMATS, default="txt",
                         metavar="|".join(FORMATS), help="output format")
-    parser.add_argument('-v', '--verbose', action="store_true")
     parser.set_defaults(func=run)
     return parser
 
 
 def run(args, extra_argv=None):
+    logger = logging.getLogger("dump")
+    logger.setLevel(args.log_level)
     if not args.out_fn:
         tag = os.path.splitext(os.path.basename(args.in_fn))[0]
         args.out_fn = "%s.%s" % (tag, args.format)
     with open(args.in_fn) as f:
-        records = iter_records(
-            f, num_records=args.num_records, verbose=args.verbose
-        )
+        records = iter_records(f, logger, num_records=args.num_records)
         Writer(args.format, args.out_fn).write(records)

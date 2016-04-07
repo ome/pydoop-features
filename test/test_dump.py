@@ -18,6 +18,7 @@
 
 import anydbm
 import cPickle
+import logging
 import os
 import re
 import shelve
@@ -46,8 +47,9 @@ class Args(object):
     def __init__(self, **kw):
         if "in_fn" not in kw:
             raise ValueError("arg 'in_fn' is required")
-        for k in "in_fn", "num_records", "out_fn", "format", "verbose":
+        for k in "in_fn", "num_records", "out_fn", "format":
             setattr(self, k, kw.get(k))
+        self.log_level = logging.CRITICAL
 
 
 class Base(unittest.TestCase):

@@ -28,6 +28,7 @@ import sys
 import os
 import warnings
 import errno
+import logging
 
 try:
     from pyavroc import AvroFileReader, AvroFileWriter
@@ -39,8 +40,12 @@ from pyfeatures.bioimg import BioImgPlane
 from pyfeatures.feature_calc import calc_features, to_avro
 from pyfeatures.schema import Signatures as out_schema
 
+logging.basicConfig(level=logging.INFO)
+
 
 def run(args, extra_argv=None):
+    logger = logging.getLogger("calc")
+    logger.setLevel(args.log_level)
     try:
         os.makedirs(args.out_dir)
     except OSError as e:
@@ -48,8 +53,7 @@ def run(args, extra_argv=None):
             sys.exit('Cannot create output dir: %s' % e)
     tag, ext = os.path.splitext(os.path.basename(args.in_fn))
     out_fn = os.path.join(args.out_dir, '%s_features%s' % (tag, ext))
-    if args.verbose:
-        print 'writing to %s' % out_fn
+    logger.info('writing to %s', out_fn)
     with open(out_fn, 'w') as fout:
         writer = AvroFileWriter(fout, out_schema)
         with open(args.in_fn) as fin:
@@ -57,8 +61,7 @@ def run(args, extra_argv=None):
             for r in reader:
                 p = BioImgPlane(r)
                 pixels = p.get_xy()
-                if args.verbose:
-                    print '  processing', [p.z, p.c, p.t]
+                logger.info('processing %r', [p.z, p.c, p.t])
                 kw = {'long': args.long, 'w': args.width, 'h': args.height}
                 for fv in calc_features(pixels, p.name, **kw):
                     out_rec = to_avro(fv)
@@ -80,6 +83,5 @@ def add_parser(subparsers):
                         help='tile width (default = image width)')
     parser.add_argument('-H', '--height', type=int, metavar="INT",
                         help='tile height (default = image height)')
-    parser.add_argument('-v', '--verbose', action='store_true')
     parser.set_defaults(func=run)
     return parser
