@@ -87,7 +87,7 @@ def get_data(fn, axis, feature=None, x=None, y=None):
             data.setdefault(
                 k1, {}).setdefault(
                     k2, {}).setdefault(
-                        k3, []).append((r['t'], r[name][idx]))
+                        k3, []).append((r[axis], r[name][idx]))
     for k1, v1 in data.iteritems():
         for k2, v2 in v1.iteritems():
             for k3, v3 in v2.iteritems():
