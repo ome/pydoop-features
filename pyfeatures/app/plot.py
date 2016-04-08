@@ -83,11 +83,15 @@ def get_data(fn, axis, feature=None, x=None, y=None):
         for name, idx in FEATURE_NAMES.itervalues():
             if feature and name != feature:
                 continue
+            try:
+                subv = r[name]
+            except KeyError:
+                continue  # "short" feature set, this subvector is missing
             k3 = (name, idx)
             data.setdefault(
                 k1, {}).setdefault(
                     k2, {}).setdefault(
-                        k3, []).append((r[axis], r[name][idx]))
+                        k3, []).append((r[axis], subv[idx]))
     for k1, v1 in data.iteritems():
         for k2, v2 in v1.iteritems():
             for k3, v3 in v2.iteritems():
