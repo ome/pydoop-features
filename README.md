@@ -1,49 +1,62 @@
 pydoop-features
 ===============
 
-How to run a standalone (no Hadoop) version of the code
--------------------------------------------------------
+What
+----
 
-In `pom.xml`, change `bio-formats.version` to whatever version of
-Bio-Formats you'd like to use (`DFSHandle` is not needed since we're
-not going to read from HDFS).
+Pydoop-features is a suite of tools for extracting features from image
+data. It uses
+[Bio-Formats](http://www.openmicroscopy.org/site/products/bio-formats)
+to read image data, [Avro](https://avro.apache.org) for
+(de)serialization and
+[WND-CHARM](https://github.com/wnd-charm/wnd-charm) for feature
+calculation.
 
-Serialize image data with Avro:
+How
+---
 
-    mvn package
-    cd scripts
-    ./serialize /path/to/image/file.ext
+The fastest way to get a working installation is to pull the
+[Docker](https://www.docker.com) image:
 
-At this point, you should have *N* Avro container files
-(`file_${i}.avro`) in the top repo dir, where *N* is the number of
-series in the input file.
+    docker pull simleo/pyfeatures
 
-Install the Python bindings for
-[Avro](https://avro.apache.org). Since the official Python libraries
-are very slow, you might want to install
-[pyavroc](https://github.com/Byhiras/pyavroc) instead.
+Java-Python interoperability is achieved via Avro. The input dataset
+can be in [any format supported by
+Bio-Formats](https://www.openmicroscopy.org/site/support/bio-formats5.1/supported-formats.html). For
+instance, download
+[MF-2CH-Z-T](http://www.loci.wisc.edu/files/software/data/MF-2CH-Z-T.zip)
+and unpack it under `/tmp`. The first step is to serialize this data
+to Avro:
 
-Install [WND-CHARM](https://github.com/wnd-charm/wnd-charm). Use the
-provided `build.sh` script if you have problems with autotools:
+    docker run -u ${UID} -v /tmp:/tmp simleo/pyfeatures \
+      serialize /tmp/MF-2CH-Z-T.tif -o /tmp/
 
-    ./build.sh
-    make install
-    python setup.py install
+You should get one avro container file per image series in the input
+dataset. In this case:
 
-You can compute features for each avro container with:
+    /tmp/MF-2CH-Z-T_{0,1,2,3,4}.avro
 
-    python local_features.py ../file_${i}.avro
+To compute features for the first avro container:
 
-Feature vectors will be serialized to `file_${i}_features.avro`
-files, which can be read from either Java or Python. For instance:
+    docker run -u ${UID} -v /tmp:/tmp simleo/pyfeatures \
+      calc /tmp/MF-2CH-Z-T_0.avro -o /tmp/
 
-    >>> from pyavroc_emu import AvroFileReader
-    >>> with open("file_0_features.avro") as f:
-    ...     reader = AvroFileReader(f)
+You might want to get a cup of coffee, feature calculation takes time.
+
+When the above finishes, you should have the following file:
+
+    /tmp/MF-2CH-Z-T_0_features.avro
+
+which can be read from either Java or Python. For instance:
+
+    >>> from avro.datafile import DataFileReader
+    >>> from avro.io import DatumReader, BinaryDecoder
+    >>> with open("/tmp/MF-2CH-Z-T_0_features.avro") as f:
+    ...     reader = DataFileReader(f, DatumReader())
     ...     records = [_ for _ in reader]
     ...
+    >>> len(records)
+    40
     >>> r = records[0]
-    >>> r['feature_names'][0]
-    u'Chebyshev-Fourier Coefficients () [0]'
-    >>> r['values'][0]
-    465.0
+    >>> r['haralick_textures']
+    [0.0015474594757607179, 0.00029323128834782644, ...]
