@@ -28,7 +28,7 @@ from libtiff import TIFF
 from avro.schema import AvroException
 from wndcharm.FeatureVector import FeatureVector
 
-from pyfeatures.feature_calc import calc_features, to_avro
+from pyfeatures.feature_calc import gen_tiles, calc_features, to_avro
 from pyfeatures.feature_names import FEATURE_NAMES
 import pyfeatures.pyavroc_emu as pyavroc_emu
 from pyfeatures.schema import Signatures
@@ -49,6 +49,55 @@ def make_random_data():
 def dump_to_tiff(ndarray, filename):
     with closing(TIFF.open(filename, mode="w")) as fo:
         fo.write_image(ndarray)
+
+
+class TestGenTiles(unittest.TestCase):
+
+    def setUp(self):
+        self.a = np.arange(H * W).reshape((H, W))
+        self.cases = [
+            ({'w': 3, 'h': None, 'dx': 1, 'dy': None},
+             [(0, 6, 0, 3), (0, 6, 1, 4), (0, 6, 2, 5),
+              (0, 6, 3, 6), (0, 6, 4, 7), (0, 6, 5, 8)]),
+            ({'w': 3, 'h': None, 'dx': 2, 'dy': None},
+             [(0, 6, 0, 3), (0, 6, 2, 5), (0, 6, 4, 7), (0, 6, 6, 8)]),
+            ({'w': 3, 'h': None, 'dx': 3, 'dy': None},
+             [(0, 6, 0, 3), (0, 6, 3, 6), (0, 6, 6, 8)]),
+            ({'w': 3, 'h': None, 'dx': 4, 'dy': None},
+             [(0, 6, 0, 3), (0, 6, 4, 7)]),
+            ({'w': 3, 'h': None, 'dx': 5, 'dy': None},
+             [(0, 6, 0, 3), (0, 6, 5, 8)]),
+            ({'w': 3, 'h': None, 'dx': 6, 'dy': None},
+             [(0, 6, 0, 3), (0, 6, 6, 8)]),
+            ({'w': 3, 'h': None, 'dx': 7, 'dy': None},
+             [(0, 6, 0, 3), (0, 6, 7, 8)]),
+            ({'w': 3, 'h': None, 'dx': 8, 'dy': None},
+             [(0, 6, 0, 3)]),
+            ({'w': 3, 'h': None, 'dx': 100, 'dy': None},
+             [(0, 6, 0, 3)]),
+            # --
+            ({'w': None, 'h': 3, 'dx': None, 'dy': 1},
+             [(0, 3, 0, 8), (1, 4, 0, 8), (2, 5, 0, 8), (3, 6, 0, 8)]),
+            ({'w': None, 'h': 3, 'dx': None, 'dy': 2},
+             [(0, 3, 0, 8), (2, 5, 0, 8), (4, 6, 0, 8)]),
+            ({'w': None, 'h': 3, 'dx': None, 'dy': 3},
+             [(0, 3, 0, 8), (3, 6, 0, 8)]),
+            ({'w': None, 'h': 3, 'dx': None, 'dy': 4},
+             [(0, 3, 0, 8), (4, 6, 0, 8)]),
+            ({'w': None, 'h': 3, 'dx': None, 'dy': 5},
+             [(0, 3, 0, 8), (5, 6, 0, 8)]),
+            ({'w': None, 'h': 3, 'dx': None, 'dy': 6},
+             [(0, 3, 0, 8)]),
+            ({'w': None, 'h': 3, 'dx': None, 'dy': 100},
+             [(0, 3, 0, 8)]),
+        ]
+
+    def runTest(self):
+        for kwargs, slices in self.cases:
+            tiles = list(gen_tiles(self.a, **kwargs))
+            self.assertEqual(len(tiles), len(slices))
+            for (i, j, t), (i1, i2, j1, j2) in izip(tiles, slices):
+                self.assertTrue(np.array_equal(t, self.a[i1: i2, j1: j2]))
 
 
 class Base(unittest.TestCase):
@@ -96,6 +145,21 @@ class TestFeatureCalc(Base):
         self.assertFeaturesEqual(s[4], self.__get_exp_features(a[4:, 3:6]))
         self.assertEqual((s[5].x, s[5].y, s[5].w, s[5].h), (6, 4, 2, 2))
         self.assertFeaturesEqual(s[5], self.__get_exp_features(a[4:, 6:]))
+
+    def test_tiling_dist(self):
+        a = make_random_data()
+        w, h = 5, 2
+        dx, dy = 3, 3
+        s = list(calc_features(a, self.name, w=w, h=h, dx=dx, dy=dy))
+        self.assertEqual(len(s), 4)
+        self.assertEqual((s[0].x, s[0].y, s[0].w, s[0].h), (0, 0, 5, 2))
+        self.assertFeaturesEqual(s[0], self.__get_exp_features(a[:2, :5]))
+        self.assertEqual((s[1].x, s[1].y, s[1].w, s[1].h), (3, 0, 5, 2))
+        self.assertFeaturesEqual(s[1], self.__get_exp_features(a[:2, 3:]))
+        self.assertEqual((s[2].x, s[2].y, s[2].w, s[2].h), (0, 3, 5, 2))
+        self.assertFeaturesEqual(s[2], self.__get_exp_features(a[3:5, :5]))
+        self.assertEqual((s[3].x, s[3].y, s[3].w, s[3].h), (3, 3, 5, 2))
+        self.assertFeaturesEqual(s[3], self.__get_exp_features(a[3:5, 3:]))
 
     def assertFeaturesEqual(self, fv1, fv2):
         for name in "feature_names", "feature_set_version":
@@ -179,7 +243,7 @@ class TestToAvro(Base):
 
 
 def load_tests(loader, tests, pattern):
-    test_cases = (TestFeatureCalc, TestToAvro)
+    test_cases = (TestGenTiles, TestFeatureCalc, TestToAvro)
     suite = unittest.TestSuite()
     for tc in test_cases:
         suite.addTests(loader.loadTestsFromTestCase(tc))

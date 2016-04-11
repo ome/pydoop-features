@@ -43,6 +43,8 @@ def add_parser(subparsers):
     parser.add_argument("iH", type=int, metavar="HEIGHT", help="image height")
     parser.add_argument("-W", type=int, metavar="INT", help="tile width")
     parser.add_argument("-H", type=int, metavar="INT", help="tile height")
+    parser.add_argument("-x", type=int, metavar="INT", help="tile x-distance")
+    parser.add_argument("-y", type=int, metavar="INT", help="tile y-distance")
     parser.add_argument('-o', '--out-fn', metavar='FILE', default="tiles.png",
                         help="output file (extension = img format)")
     parser.set_defaults(func=run)
@@ -59,9 +61,11 @@ def run(args, extra_argv=None):
     mx = max(1, .05 * args.iW)
     my = max(1, .05 * args.iH)
     ax.axis([-mx, args.iW + mx, -my, args.iH + my])
-    for i, j, tile in gen_tiles(img_array, w=args.W, h=args.H):
+    for i, j, tile in gen_tiles(img_array, w=args.W, h=args.H,
+                                dx=args.x, dy=args.y):
         h, w = tile.shape
         ax.add_patch(patches.Rectangle((j, i), w, h, alpha=TILE_ALPHA))
+        logger.debug("%r", (j, i, w, h))
     ax.invert_yaxis()
     if max(args.iW, args.iH) <= MAX_SMALL_SIZE:
         ax.set_xticks(xrange(args.iW + 1))
