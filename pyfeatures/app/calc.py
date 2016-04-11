@@ -62,7 +62,13 @@ def run(args, extra_argv=None):
                 p = BioImgPlane(r)
                 pixels = p.get_xy()
                 logger.info('processing %r', [p.z, p.c, p.t])
-                kw = {'long': args.long, 'w': args.width, 'h': args.height}
+                kw = {
+                    'long': args.long,
+                    'w': args.width,
+                    'h': args.height,
+                    'dx': args.delta_x,
+                    'dy': args.delta_y,
+                }
                 for fv in calc_features(pixels, p.name, **kw):
                     out_rec = to_avro(fv)
                     for name in 'img_path', 'series', 'z', 'c', 't':
@@ -83,5 +89,9 @@ def add_parser(subparsers):
                         help='tile width (default = image width)')
     parser.add_argument('-H', '--height', type=int, metavar="INT",
                         help='tile height (default = image height)')
+    parser.add_argument("-x", "--delta-x", type=int, metavar="INT",
+                        help="horizontal distance between consecutive tiles")
+    parser.add_argument("-y", "--delta-y", type=int, metavar="INT",
+                        help="vertical distance between consecutive tiles")
     parser.set_defaults(func=run)
     return parser
