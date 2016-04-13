@@ -11,6 +11,9 @@ install_pyavroc() {
     python setup.py install --skip-build
     popd
     popd
+    # --- FIXME: pyavroc_emu is currently imported unconditionally ---
+    pip install avro
+    # ----------------------------------------------------------------
 }
 
 case "${1}" in
