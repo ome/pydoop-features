@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from collections import OrderedDict
+import csv
 import omero
 import omero.tables
 import os
@@ -19,8 +20,10 @@ class AvroFileReader(DataFileReader):
         super(AvroFileReader, self).__init__(f, DatumReader())
 
 
-filein = sys.argv[1]
-fileout = os.path.abspath(sys.argv[2])
+assert len(sys.argv) == 4, 'Required arguments: in.avro mapping.tsv out.h5'
+avroin = sys.argv[1]
+tsvin = sys.argv[2]
+fileout = os.path.abspath(sys.argv[3])
 
 
 def column_type(ctype, colname):
@@ -35,9 +38,25 @@ def column_type(ctype, colname):
     return col
 
 
+def get_image_ids(tsv):
+    iids = {}
+    with open(tsv) as f:
+        r = csv.reader(f, delimiter='\t')
+        header = r.next()
+        assert header == ['PLATE', 'SERIES', 'WELL', 'FIELD', 'IMG_ID']
+        for line in r:
+            name = line[0]
+            iid = int(line[-1])
+            try:
+                iids[name].append(iid)
+            except KeyError:
+                iids[name] = [iid]
+    return iids
+
+
 id_fields = OrderedDict([
     ('ImageID', 'Image')
-    ])
+])
 
 metadata_fields = OrderedDict([
     ('series', 'Long'),
@@ -51,7 +70,7 @@ metadata_fields = OrderedDict([
     ('t', 'Long'),
     ('w', 'Long'),
     ('h', 'Long'),
-    ])
+])
 
 exclude_fields = (
     'name',
@@ -60,18 +79,36 @@ exclude_fields = (
 )
 
 
-f = open(filein)
+f = open(avroin)
 a = AvroFileReader(f)
+# Assume 1:1 mapping of avro:plate
+platename = None
+iids = get_image_ids(tsvin)
 cols = []
+
 for i, r in enumerate(a):
     print i
+    pn = r['name'].rsplit('_', 1)[0]
+    if not platename:
+        platename = pn
+        assert platename, 'Empty platename'
+    else:
+        assert platename == pn, 'Multiple platenames in avro file'
+    iid = iids[platename][i]
+
     if not cols:
         all_fields = r.keys()
         feature_fields = sorted(set(all_fields).difference(
             metadata_fields.keys()).difference(exclude_fields))
         assert len(
             all_fields) == len(feature_fields) + len(metadata_fields) + len(
-                exclude_fields)
+                exclude_fields), 'Unexpected fields'
+
+        for mk, mv in id_fields.iteritems():
+            c = column_type(mv, mk)
+            assert mv == 'Image', 'Not implemented for non-image IDs'
+            c.values = [iid]
+            cols.append(c)
 
         for mk, mv in metadata_fields.iteritems():
             c = column_type(mv, mk)
@@ -87,7 +124,10 @@ for i, r in enumerate(a):
 
     else:
         for c in cols:
-            c.values.append(r[c.name])
+            if c.name == 'ImageID':
+                c.values.append(iid)
+            else:
+                c.values.append(r[c.name])
 
 init_needed = not os.path.exists(fileout)
 t = omero.tables.HDFLIST.getOrCreate(fileout)
@@ -95,7 +135,7 @@ if init_needed:
     t.initialize(cols)
 t.append(cols)
 
-#t._HdfStorage__mea.read_coordinates(range(t._HdfStorage__mea.nrows))
+# t._HdfStorage__mea.read_coordinates(range(t._HdfStorage__mea.nrows))
 
 t.cleanup()
 a.close()
