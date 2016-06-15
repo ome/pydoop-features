@@ -20,10 +20,11 @@ class AvroFileReader(DataFileReader):
         super(AvroFileReader, self).__init__(f, DatumReader())
 
 
-assert len(sys.argv) == 4, 'Required arguments: in.avro mapping.tsv out.h5'
-avroin = sys.argv[1]
-tsvin = sys.argv[2]
-fileout = os.path.abspath(sys.argv[3])
+args = sys.argv
+assert len(args) == 4, 'Required arguments: in.avro mapping.tsv out.h5'
+avroin = args[1]
+tsvin = args[2]
+fileout = os.path.abspath(args[3])
 
 
 def column_type(ctype, colname):
@@ -45,12 +46,10 @@ def get_image_ids(tsv):
         header = r.next()
         assert header == ['PLATE', 'SERIES', 'WELL', 'FIELD', 'IMG_ID']
         for line in r:
-            name = line[0]
-            iid = int(line[-1])
-            try:
-                iids[name].append(iid)
-            except KeyError:
-                iids[name] = [iid]
+            k = '%s_%s' % (line[0], line[1])
+            iid = long(line[-1])
+            assert k not in iids
+            iids[k] = iid
     return iids
 
 
@@ -59,8 +58,8 @@ id_fields = OrderedDict([
 ])
 
 metadata_fields = OrderedDict([
-    ('series', 'Long'),
     # 'name',
+    # 'series',
     # 'img_path',
     ('version', 'String 3'),
     ('x', 'Long'),
@@ -74,6 +73,7 @@ metadata_fields = OrderedDict([
 
 exclude_fields = (
     'name',
+    'series',
     'img_path',
     # 'version',
 )
@@ -81,20 +81,12 @@ exclude_fields = (
 
 f = open(avroin)
 a = AvroFileReader(f)
-# Assume 1:1 mapping of avro:plate
-platename = None
 iids = get_image_ids(tsvin)
 cols = []
 
 for i, r in enumerate(a):
-    print i
-    pn = r['name'].rsplit('_', 1)[0]
-    if not platename:
-        platename = pn
-        assert platename, 'Empty platename'
-    else:
-        assert platename == pn, 'Multiple platenames in avro file'
-    iid = iids[platename][i]
+    iid = iids[r['name']]
+    print i, r['name'], iid
 
     if not cols:
         all_fields = r.keys()
@@ -128,6 +120,7 @@ for i, r in enumerate(a):
                 c.values.append(iid)
             else:
                 c.values.append(r[c.name])
+
 
 init_needed = not os.path.exists(fileout)
 t = omero.tables.HDFLIST.getOrCreate(fileout)
