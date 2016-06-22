@@ -13,6 +13,7 @@ Arguments:
 import argparse
 from collections import OrderedDict
 import csv
+import json
 import omero
 import omero.tables
 import os
@@ -123,10 +124,12 @@ def convert_avro(f, omero_ids, id_fields, expected_features):
             if not cols:
                 for mk, mv in id_fields.iteritems():
                     c = column_type(mv, mk)
+                    c.description = json.dumps({'_metadata': True})
                     cols.append(c)
 
                 for mk, mv in metadata_fields.iteritems():
                     c = column_type(mv, mk)
+                    c.description = json.dumps({'_metadata': True})
                     cols.append(c)
 
                 for fk in feature_fields:
