@@ -5,6 +5,7 @@ Convert avro file into an OMERO.features OMERO.tables HDF5 file.
 
 Arguments:
 - mapping.tsv: Mapping of OMERO IDs to avro records, produced by map_series.py
+    Any columns matching regexp '^\w+ID$' will be included in the output
 - output.h5: Output OMERO.features file, data will be appended if it exists
 - inputs: One or more avro files to be converted
 """
@@ -15,7 +16,9 @@ import csv
 import omero
 import omero.tables
 import os
+import re
 import sys
+from time import time
 
 
 from avro.datafile import DataFileReader
@@ -45,23 +48,33 @@ def column_type(ctype, colname):
     return col
 
 
-def get_image_ids(tsv):
-    iids = {}
+def parse_header(header):
+    # E.g. ['PLATE', 'SERIES', 'WELL', 'FIELD', 'Image_ID', 'Well_ID']
+    headermap = OrderedDict((v, k) for (k, v) in enumerate(header))
+    assert 'PLATE' in headermap
+    assert 'SERIES' in headermap
+    idmap = OrderedDict((h, p) for (h, p) in headermap.iteritems()
+                        if re.match('\w+ID$', h))
+    return headermap, idmap
+
+
+def get_omero_ids(tsv):
     with open(tsv) as f:
         r = csv.reader(f, delimiter='\t')
-        header = r.next()
-        assert header == ['PLATE', 'SERIES', 'WELL', 'FIELD', 'IMG_ID']
+        headermap, idmap = parse_header(r.next())
+
+        # Mapping of OMERO.features ID columns:types e.g. ('ImageID', 'Image')
+        id_fields = OrderedDict((h, h[:-2]) for h in idmap)
+        omero_ids = dict((h, {}) for h in idmap)
+
         for line in r:
-            k = '%s_%s' % (line[0], line[1])
-            iid = long(line[-1])
-            assert k not in iids
-            iids[k] = iid
-    return iids
+            k = '%s_%s' % (line[headermap['PLATE']], line[headermap['SERIES']])
+            for idh, idp in idmap.iteritems():
+                oid = long(line[idp])
+                assert k not in omero_ids[idh]
+                omero_ids[idh][k] = oid
+    return omero_ids, id_fields
 
-
-id_fields = OrderedDict([
-    ('ImageID', 'Image')
-])
 
 metadata_fields = OrderedDict([
     # 'name',
@@ -84,7 +97,7 @@ exclude_fields = (
 )
 
 
-def convert_avro(f, iids, expected_features):
+def convert_avro(f, omero_ids, id_fields, expected_features):
     """
     f: File handle to the input file
     iids: Map of plate-series to omero-image-ids
@@ -95,9 +108,6 @@ def convert_avro(f, iids, expected_features):
     with DataFileReader(f, DatumReader()) as a:
 
         for i, r in enumerate(a):
-            iid = iids[r['name']]
-            print i, r['name'], iid
-
             all_fields = r.keys()
             feature_fields = sorted(set(all_fields).difference(
                 metadata_fields.keys()).difference(exclude_fields))
@@ -113,7 +123,6 @@ def convert_avro(f, iids, expected_features):
             if not cols:
                 for mk, mv in id_fields.iteritems():
                     c = column_type(mv, mk)
-                    assert mv == 'Image', 'Not implemented for non-image IDs'
                     cols.append(c)
 
                 for mk, mv in metadata_fields.iteritems():
@@ -127,8 +136,9 @@ def convert_avro(f, iids, expected_features):
                         cols.append(c)
 
             for c in cols:
-                if c.name == 'ImageID':
-                    c.values.append(iid)
+                if c.name.endswith('ID'):
+                    oid = omero_ids[c.name][r['name']]
+                    c.values.append(oid)
                 else:
                     c.values.append(r[c.name])
 
@@ -137,19 +147,24 @@ def convert_avro(f, iids, expected_features):
 
 def main(argv):
     args = parse_args(argv[1:])
-    iids = get_image_ids(args.mapping)
+    omero_ids, id_fields = get_omero_ids(args.mapping)
     fileout = os.path.abspath(args.output)
     expected_features = []
 
+    start = time()
     for avroin in args.inputs:
         with open(avroin) as f:
+            print 'Converting %s' % avroin
             init_needed = not os.path.exists(fileout)
-            cols = convert_avro(f, iids, expected_features)
+            cols = convert_avro(f, omero_ids, id_fields, expected_features)
             t = omero.tables.HDFLIST.getOrCreate(fileout)
             if init_needed:
                 t.initialize(cols)
             t.append(cols)
             t.cleanup()
+            print '\tCumulative time: %d seconds' % (time() - start)
+
+    print 'Done'
 
 # If you want to read back the data use
 # t._HdfStorage__mea.read_coordinates(range(t._HdfStorage__mea.nrows))
