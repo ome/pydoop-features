@@ -50,7 +50,7 @@ def column_type(ctype, colname):
 
 
 def parse_header(header):
-    # E.g. ['PLATE', 'SERIES', 'WELL', 'FIELD', 'Image_ID', 'Well_ID']
+    # E.g. ['PLATE', 'SERIES', 'WELL', 'FIELD', 'ImageID', 'WellID']
     headermap = OrderedDict((v, k) for (k, v) in enumerate(header))
     assert 'PLATE' in headermap
     assert 'SERIES' in headermap
@@ -101,7 +101,8 @@ exclude_fields = (
 def convert_avro(f, omero_ids, id_fields, expected_features):
     """
     f: File handle to the input file
-    iids: Map of plate-series to omero-image-ids
+    omero_ids: Maps of plate-series to OMERO IDs
+    id_fields: A list of ID columns: [(NameID, Type)]
     expected_features: The list of expected features, if empty this will be
     populated by the first avro record
     """
