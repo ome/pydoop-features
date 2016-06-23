@@ -7,3 +7,4 @@ In addition `omerofeatures.py` requires `omero.tables`, which requires Pytables.
 
 - `map_series.py`: Create a TSV file containing OMERO object IDs
 - `omerofeatures.py`: Convert avro files into an OMERO.features file.
+- `concatfeatures.py`: Concatenate multiple OMERO.features files
