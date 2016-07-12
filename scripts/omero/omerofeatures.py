@@ -21,9 +21,17 @@ import re
 import sys
 from time import time
 
+try:
+    from pyavroc import AvroFileReader
+except ImportError:
+    # -- keep this script standalone for now (code copied from pyavroc_emu) --
+    from avro.datafile import DataFileReader
+    from avro.io import DatumReader
 
-from avro.datafile import DataFileReader
-from avro.io import DatumReader
+    class AvroFileReader(DataFileReader):
+        def __init__(self, f):
+            super(AvroFileReader, self).__init__(f, DatumReader())
+    # ------------------------------------------------------------------------
 
 
 def parse_args(args):
@@ -107,44 +115,44 @@ def convert_avro(f, omero_ids, id_fields, expected_features):
     populated by the first avro record
     """
     cols = []
-    with DataFileReader(f, DatumReader()) as a:
+    a = AvroFileReader(f)
 
-        for i, r in enumerate(a):
-            all_fields = r.keys()
-            feature_fields = sorted(set(all_fields).difference(
-                metadata_fields.keys()).difference(exclude_fields))
-            if expected_features:
-                assert (
-                    expected_features == feature_fields), 'Mismatched features'
+    for i, r in enumerate(a):
+        all_fields = r.keys()
+        feature_fields = sorted(set(all_fields).difference(
+            metadata_fields.keys()).difference(exclude_fields))
+        if expected_features:
+            assert (
+                expected_features == feature_fields), 'Mismatched features'
+        else:
+            expected_features = feature_fields
+        assert len(all_fields) == (
+            len(feature_fields) + len(metadata_fields) + len(
+                exclude_fields)), 'Unexpected fields'
+
+        if not cols:
+            for mk, mv in id_fields.iteritems():
+                c = column_type(mv, mk)
+                c.description = json.dumps({'_metadata': True})
+                cols.append(c)
+
+            for mk, mv in metadata_fields.iteritems():
+                c = column_type(mv, mk)
+                c.description = json.dumps({'_metadata': True})
+                cols.append(c)
+
+            for fk in feature_fields:
+                size = len(r[fk])
+                if size > 0:
+                    c = column_type('DoubleArray %d' % size, fk)
+                    cols.append(c)
+
+        for c in cols:
+            if c.name.endswith('ID'):
+                oid = omero_ids[c.name][r['name']]
+                c.values.append(oid)
             else:
-                expected_features = feature_fields
-            assert len(all_fields) == (
-                len(feature_fields) + len(metadata_fields) + len(
-                    exclude_fields)), 'Unexpected fields'
-
-            if not cols:
-                for mk, mv in id_fields.iteritems():
-                    c = column_type(mv, mk)
-                    c.description = json.dumps({'_metadata': True})
-                    cols.append(c)
-
-                for mk, mv in metadata_fields.iteritems():
-                    c = column_type(mv, mk)
-                    c.description = json.dumps({'_metadata': True})
-                    cols.append(c)
-
-                for fk in feature_fields:
-                    size = len(r[fk])
-                    if size > 0:
-                        c = column_type('DoubleArray %d' % size, fk)
-                        cols.append(c)
-
-            for c in cols:
-                if c.name.endswith('ID'):
-                    oid = omero_ids[c.name][r['name']]
-                    c.values.append(oid)
-                else:
-                    c.values.append(r[c.name])
+                c.values.append(r[c.name])
 
     return cols
 
