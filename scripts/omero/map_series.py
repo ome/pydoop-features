@@ -41,7 +41,7 @@ def main(argv):
     print "writing to %s" % args.out_file
     print "SCREEN: %s" % screen.name
     with open(args.out_file, "w") as fo:
-        fo.write("PLATE\tSERIES\tWELL\tFIELD\tIMG_ID\n")
+        fo.write("PLATE\tSERIES\tWELL\tFIELD\tImageID\tWellID\n")
         for p in screen.listChildren():
             rows = []
             print "  plate: %s" % p.name
@@ -50,13 +50,13 @@ def main(argv):
                 for i in xrange(n_fields):
                     img = w.getImage(i)
                     well_tag = "%s%02d" % (LETTERS[w.row], w.column + 1)
-                    rows.append(
-                        (p.name, img.getSeries(), well_tag, i + 1, img.id)
-                    )
+                    rows.append((
+                        p.name, img.getSeries(), well_tag, i + 1, img.id, w.id
+                    ))
             rows.sort(key=itemgetter(1))
             rows.sort()
             for r in rows:
-                fo.write("%s\t%d\t%s\t%d\t%d\n" % r)
+                fo.write("%s\t%d\t%s\t%d\t%d\t%d\n" % r)
 
 
 if __name__ == "__main__":

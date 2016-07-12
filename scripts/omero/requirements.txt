@@ -1,0 +1,5 @@
+avro
+ipython
+numpy
+tables
+zeroc-ice
