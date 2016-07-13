@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# FIXME: not an integration test, move elsewhere
-
 import sys
 import os
 import subprocess as sp
