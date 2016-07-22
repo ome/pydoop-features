@@ -21,6 +21,7 @@
 package it.crs4.features;
 
 import java.io.File;
+import java.util.HashSet;
 
 import loci.formats.IFormatReader;
 import loci.formats.ImageReader;
@@ -50,6 +51,8 @@ public final class ImageToAvro {
     opts.addOption("t", "tag", true, "base tag for the avro output file");
     opts.addOption("w", "memoWait", true, "Memoizer wait (advanced)");
     opts.addOption("d", "memoDir", true, "Memoizer directory (advanced)");
+    opts.addOption("zs", "zsubset", true, "Subset of Z planes");
+    opts.addOption("ts", "tsubset", true, "Subset of T planes");
     CommandLineParser parser = new GnuParser();
     return parser.parse(opts, args);
   }
@@ -105,6 +108,22 @@ public final class ImageToAvro {
       reader = new Memoizer(reader, memoWait, memoDir);
     }
 
+    HashSet<Integer> zs = new HashSet<Integer>();
+    if (cmd.hasOption("zsubset")) {
+      String zsubset = cmd.getOptionValue("zsubset");
+      for (String s: zsubset.split(",")) {
+        zs.add(Integer.parseInt(s));
+      }
+    }
+
+    HashSet<Integer> ts = new HashSet<Integer>();
+    if (cmd.hasOption("tsubset")) {
+      String tsubset = cmd.getOptionValue("tsubset");
+      for (String s: tsubset.split(",")) {
+        ts.add(Integer.parseInt(s));
+      }
+    }
+
     LOGGER.info("Reading from {}", fn);
     BioImgFactory factory = new BioImgFactory(reader, imgPath);
     int seriesCount = factory.getSeriesCount();
@@ -116,7 +135,7 @@ public final class ImageToAvro {
       name = String.format("%s_%d", tag, i);
       outFn = new File(outDirName, name + ".avro").getPath();
       factory.setSeries(i);
-      factory.writeSeries(name, outFn);
+      factory.writeSeries(name, outFn, 0, 0, -1, -1, zs, ts);
       LOGGER.info("Writing to {}", outFn);
     }
     reader.close();

@@ -22,6 +22,7 @@ package it.crs4.features;
 
 import java.util.List;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.nio.ByteBuffer;
 import java.io.IOException;
 import java.io.File;
@@ -107,10 +108,10 @@ public class BioImgFactory {
 
   public BioImgPlane build(String name, int no)
       throws FormatException, IOException {
-    return build(name, no, 0, 0, -1, -1);
+    return build(name, no, 0, 0, -1, -1, null, null);
   }
 
-  public BioImgPlane build(String name, int no, int x, int y, int w, int h)
+  public BioImgPlane build(String name, int no, int x, int y, int w, int h, HashSet<Integer> zs, HashSet<Integer> ts)
       throws FormatException, IOException {
     if (w < 0) {
       w = shape.get(dimIdx[0]);
@@ -119,6 +120,14 @@ public class BioImgFactory {
       h = shape.get(dimIdx[1]);
     }
     int[] zct = reader.getZCTCoords(no);
+
+    if (!zs.isEmpty() && !zs.contains(zct[0])) {
+      return null;
+    }
+    if (!ts.isEmpty() && !ts.contains(zct[2])) {
+      return null;
+    }
+
     Integer[] offsets = new Integer[N_DIM];
     offsets[dimIdx[0]] = x;
     offsets[dimIdx[1]] = y;
@@ -144,21 +153,25 @@ public class BioImgFactory {
 
   public void writeSeries(String name, String fileName)
       throws FormatException, IOException {
-    writeSeries(name, fileName, 0, 0, -1, -1);
+    writeSeries(name, fileName, 0, 0, -1, -1, null, null);
   }
 
   public void writeSeries(String name, String fileName,
-                          int x, int y, int w, int h)
+                          int x, int y, int w, int h, HashSet<Integer> zs, HashSet<Integer> ts)
       throws FormatException, IOException {
     DataFileWriter<BioImgPlane> writer = new DataFileWriter<BioImgPlane>(
       new SpecificDatumWriter<BioImgPlane>(BioImgPlane.class)
     );
+    boolean initialised = false;
     for (int i = 0; i < reader.getImageCount(); i++) {
-      BioImgPlane plane = build(name, i, x, y, w, h);
-      if (i == 0) {
-        writer.create(plane.getSchema(), new File(fileName));
+      BioImgPlane plane = build(name, i, x, y, w, h, zs, ts);
+      if (plane != null) {
+        if (!initialised) {
+          writer.create(plane.getSchema(), new File(fileName));
+          initialised = true;
+        }
+        writer.append(plane);
       }
-      writer.append(plane);
     }
     writer.close();
   }
