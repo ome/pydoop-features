@@ -44,6 +44,13 @@ logging.basicConfig(level=logging.INFO)
 
 
 def run(args, extra_argv=None):
+    if args.stderr:
+        # Log to file instead of default stderr
+        fileh = logging.FileHandler(args.stderr)
+        rootlogger = logging.getLogger()
+        for h in rootlogger.handlers:
+            rootlogger.removeHandler(h)
+        rootlogger.addHandler(fileh)
     logger = logging.getLogger("calc")
     logger.setLevel(args.log_level)
     try:
@@ -75,6 +82,7 @@ def run(args, extra_argv=None):
                         out_rec[name] = getattr(p, name)
                     writer.write(out_rec)
         writer.close()
+    logger.info("All done")
     return 0
 
 

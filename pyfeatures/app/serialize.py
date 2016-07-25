@@ -33,7 +33,7 @@ def run(args, extra_argv=None):
     sp_argv = ["java", "-cp", JAR_PATH, "it.crs4.features.ImageToAvro"]
     sp_argv.extend(extra_argv)
     try:
-        sp.check_call(sp_argv)
+        sp.check_call(sp_argv, stdout=args.stdout, stderr=args.stderr)
     except sp.CalledProcessError:
         if extra_argv:
             raise

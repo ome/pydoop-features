@@ -46,6 +46,8 @@ def make_parser():
                         help='print version tag and exit')
     parser.add_argument('--log-level', metavar="LEVEL", type=log_level,
                         default="INFO", help="logging level")
+    parser.add_argument('--stdout', help="Redirect stdout to this file")
+    parser.add_argument('--stderr', help="Redirect stderr to this file")
     subparsers = parser.add_subparsers(help="sub-commands")
     for n in SUBMOD_NAMES:
         mod = importlib.import_module("%s.%s" % (__package__, n))
