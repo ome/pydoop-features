@@ -111,7 +111,8 @@ public class BioImgFactory {
     return build(name, no, 0, 0, -1, -1, null, null);
   }
 
-  public BioImgPlane build(String name, int no, int x, int y, int w, int h, HashSet<Integer> zs, HashSet<Integer> ts)
+  public BioImgPlane build(String name, int no, int x, int y, int w, int h,
+                           HashSet<Integer> zs, HashSet<Integer> ts)
       throws FormatException, IOException {
     if (w < 0) {
       w = shape.get(dimIdx[0]);
@@ -157,7 +158,8 @@ public class BioImgFactory {
   }
 
   public void writeSeries(String name, String fileName,
-                          int x, int y, int w, int h, HashSet<Integer> zs, HashSet<Integer> ts)
+                          int x, int y, int w, int h,
+                          HashSet<Integer> zs, HashSet<Integer> ts)
       throws FormatException, IOException {
     DataFileWriter<BioImgPlane> writer = new DataFileWriter<BioImgPlane>(
       new SpecificDatumWriter<BioImgPlane>(BioImgPlane.class)
