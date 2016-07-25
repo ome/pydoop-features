@@ -35,11 +35,22 @@ def run(args, extra_argv=None):
         for prop in args.java_d:
             java.append('-D%s' % prop)
     sp_argv = java + ["it.crs4.features.ImageToAvro"] + extra_argv
+    stdout = None
+    stderr = None
     try:
-        sp.check_call(sp_argv, stdout=args.stdout, stderr=args.stderr)
+        if args.stdout:
+            stdout = open(args.stdout, 'a')
+        if args.stderr:
+            stderr = open(args.stderr, 'a')
+        sp.check_call(sp_argv, stdout=stdout, stderr=stderr)
     except sp.CalledProcessError:
         if extra_argv:
             raise
+
+    if stdout:
+        stdout.close()
+    if stderr:
+        stderr.close()
     return 0
 
 
