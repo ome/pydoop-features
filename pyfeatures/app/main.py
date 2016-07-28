@@ -21,7 +21,9 @@ Pyfeatures command line tool.
 """
 
 import argparse
+import errno
 import importlib
+import os
 
 from .common import log_level
 
@@ -55,7 +57,21 @@ def make_parser():
     return parser
 
 
+def create_log_dirs(args):
+    for f in [args.stdout, args.stderr]:
+        d = os.path.dirname(f) if f else None
+        if d:
+            try:
+                os.makedirs(d)
+            except OSError as e:
+                if e.errno == errno.EEXIST and os.path.isdir(d):
+                    pass
+                else:
+                    raise
+
+
 def main(argv=None):
     parser = make_parser()
     args, extra_argv = parser.parse_known_args(argv)
+    create_log_dirs(args)
     args.func(args, extra_argv=extra_argv)
