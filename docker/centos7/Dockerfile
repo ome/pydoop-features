@@ -1,8 +1,7 @@
-FROM centos:centos6
-MAINTAINER simone.leo@crs4.it
+FROM centos:7
+MAINTAINER ome-devel@lists.openmicroscopy.org.uk
 
-RUN yum -y update
-RUN yum -y install centos-release-SCL epel-release
+RUN yum -y install epel-release
 RUN yum -y install \
     fftw-devel \
     fftw-static \
@@ -12,12 +11,11 @@ RUN yum -y install \
     java-1.8.0-openjdk-devel \
     libpng-devel \
     libtiff-devel \
-    python27 \
-    python27-devel \
-    python27-scipy \
-    swig \
-    tar
-RUN echo ". /opt/rh/python27/enable" >/etc/profile.d/python.sh
+    make \
+    python-devel \
+    scipy \
+    swig
+
 COPY install_maven.sh /
 RUN bash install_maven.sh
 COPY set_bf_ver.py /
