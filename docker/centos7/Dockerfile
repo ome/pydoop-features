@@ -26,4 +26,4 @@ RUN useradd -m features
 USER features
 ENV HOME /home/features
 
-ENTRYPOINT ["/usr/local/bin/pyfeatures"]
+ENTRYPOINT ["/usr/bin/pyfeatures"]

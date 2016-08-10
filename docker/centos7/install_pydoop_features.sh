@@ -37,10 +37,3 @@ popd
 pushd pydoop-features
 python setup.py install
 popd
-
-cat <<EOF >/usr/local/bin/pyfeatures
-#!/bin/bash
-. /etc/profile
-/opt/rh/python27/root/usr/bin/pyfeatures "\$@"
-EOF
-chmod +x /usr/local/bin/pyfeatures
