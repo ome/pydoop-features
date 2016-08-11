@@ -40,7 +40,8 @@ from pyfeatures.bioimg import BioImgPlane
 from pyfeatures.feature_calc import calc_features, to_avro
 from pyfeatures.schema import Signatures as out_schema
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO, format='%(asctime)-15s %(levelname)s: %(message)s')
 
 
 def run(args, extra_argv=None):
