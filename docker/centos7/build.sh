@@ -19,5 +19,6 @@ yum -y install \
 
 bash install_maven.sh
 bash install_pydoop_features.sh
+bash install_pyavroc.sh
 
 yum clean all
