@@ -12,7 +12,6 @@ from pyfeatures.feature_names import FEATURE_NAMES
 
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.dirname(os.path.dirname(THIS_DIR))
 IMG_FN = os.path.join(THIS_DIR, "37117_small.tif")
 
 

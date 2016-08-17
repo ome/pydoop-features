@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# FIXME: not an integration test, move elsewhere
-
 import sys
 import os
 import subprocess as sp
@@ -15,10 +13,6 @@ import numpy as np
 import pyfeatures.pyavroc_emu as pyavroc_emu
 from pyfeatures.bioimg import BioImgPlane
 from pyfeatures.feature_calc import calc_features
-
-
-THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.dirname(os.path.dirname(THIS_DIR))
 
 MIN_W = 200
 MIN_H = 200
@@ -35,21 +29,23 @@ def get_divisors(n, low=1):
 
 
 def run_serialize(img_fn, out_dir):
-    prog = os.path.join(REPO_ROOT, "scripts", "serialize")
-    sp.check_call([prog, "-o", out_dir, img_fn])
+    args = ["pyfeatures", "serialize", "-o", out_dir, img_fn]
+    sp.check_call(args)
 
 
 def make_parser():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser.add_argument("img_fn", metavar="IMG_FILE", help="input image file")
     parser.add_argument("-o", "--out-fn", metavar="FILE", default="stats.tsv",
                         help="output filename")
     parser.add_argument("-l", "--long", action="store_true",
                         help="extract WND-CHARM's \"long\" features set")
     parser.add_argument("-W", "--min-width", type=int, metavar="INT",
-                        help="minimum tile width (default = %s)" % MIN_W)
+                        default=MIN_W, help="minimum tile width")
     parser.add_argument("-H", "--min-height", type=int, metavar="INT",
-                        help="minimum tile height (default = %s)" % MIN_H)
+                        default=MIN_H, help="minimum tile height")
     return parser
 
 

@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# FIXME: not an integration test, move elsewhere
-
 import sys
 import csv
 import argparse
@@ -44,7 +42,9 @@ def plot_data(data, img_fn):
 
 
 def make_parser():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser.add_argument("stats_fn", metavar="STATS_FILE",
                         help="stats file (from run_tile_size)")
     parser.add_argument("-o", "--out-fn", metavar="FILE", default="stats.png",
