@@ -122,10 +122,10 @@ public class BioImgFactory {
     }
     int[] zct = reader.getZCTCoords(no);
 
-    if (!zs.isEmpty() && !zs.contains(zct[0])) {
+    if (null != zs && !zs.contains(zct[0])) {
       return null;
     }
-    if (!ts.isEmpty() && !ts.contains(zct[2])) {
+    if (null != ts && !ts.contains(zct[2])) {
       return null;
     }
 
