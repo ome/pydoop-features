@@ -30,13 +30,27 @@ from pyfeatures import JAR_PATH
 def run(args, extra_argv=None):
     if extra_argv is None:
         extra_argv = []
-    sp_argv = ["java", "-cp", JAR_PATH, "it.crs4.features.ImageToAvro"]
-    sp_argv.extend(extra_argv)
+    java = ["java", "-cp", JAR_PATH]
+    if args.java_d:
+        for prop in args.java_d:
+            java.append('-D%s' % prop)
+    sp_argv = java + ["it.crs4.features.ImageToAvro"] + extra_argv
+    stdout = None
+    stderr = None
     try:
-        sp.check_call(sp_argv)
+        if args.stdout:
+            stdout = open(args.stdout, 'a')
+        if args.stderr:
+            stderr = open(args.stderr, 'a')
+        sp.check_call(sp_argv, stdout=stdout, stderr=stderr)
     except sp.CalledProcessError:
         if extra_argv:
             raise
+
+    if stdout:
+        stdout.close()
+    if stderr:
+        stderr.close()
     return 0
 
 
@@ -46,5 +60,7 @@ def add_parser(subparsers):
         description=__doc__,
         epilog="Run without arguments to print the Java help."
     )
+    parser.add_argument('-D', dest='java_d', metavar='JAVA_PROPERTY',
+                        nargs='+', help='Java properties')
     parser.set_defaults(func=run)
     return parser

@@ -28,7 +28,7 @@ instance, download
 and unpack it under `/tmp`. The first step is to serialize this data
 to Avro:
 
-    docker run -u ${UID} -v /tmp:/tmp simleo/pyfeatures \
+    docker run -u ${UID} --rm -v /tmp:/tmp simleo/pyfeatures \
       serialize /tmp/MF-2CH-Z-T.tif -o /tmp/
 
 You should get one avro container file per image series in the input
@@ -38,7 +38,7 @@ dataset. In this case:
 
 To compute features for the first avro container:
 
-    docker run -u ${UID} -v /tmp:/tmp simleo/pyfeatures \
+    docker run -u ${UID} --rm -v /tmp:/tmp simleo/pyfeatures \
       calc /tmp/MF-2CH-Z-T_0.avro -o /tmp/
 
 You might want to get a cup of coffee, feature calculation takes time.
