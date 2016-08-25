@@ -170,7 +170,7 @@ public class BioImgFactoryTest {
     }
   }
 
-  private void checkPlane(BioImgPlane p, int seriesIdx) {
+  private int checkPlane(BioImgPlane p, int seriesIdx) {
     ArraySlice a = p.getPixelData();
     List<Integer> offsets = a.getOffsets();
     for (int i = 0; i < 2; i ++) {
@@ -210,6 +210,7 @@ public class BioImgFactoryTest {
     for (byte b: expBytes) {
       assertEquals(buffer.get(), b);
     }
+    return planeIdx;
   }
 
   private File[] dumpToAvro() throws Exception {
@@ -235,23 +236,29 @@ public class BioImgFactoryTest {
     return avroFiles;
   }
 
+  private List<Integer> checkAvroRecords(int s, File avroF) throws Exception {
+    List<Integer> indices = new ArrayList<Integer>();
+    DataFileReader<BioImgPlane> reader = new DataFileReader<BioImgPlane>(
+        avroF, new SpecificDatumReader<BioImgPlane>(BioImgPlane.class)
+    );
+    BioImgPlane p = null;
+    while (reader.hasNext()) {
+      p = reader.next(p);
+      indices.add(checkPlane(p, s));
+    }
+    reader.close();
+    return indices;
+  }
+
   @Test
   public void testWriteSeries() throws Exception {
     File[] avroFiles = dumpToAvro();
     for (int s = 0; s < SERIES_COUNT; s++) {
-      DataFileReader<BioImgPlane> reader = new DataFileReader<BioImgPlane>(
-        avroFiles[s], new SpecificDatumReader<BioImgPlane>(BioImgPlane.class)
-      );
-      int planeIdx = 0;
-      BioImgPlane p = null;
-      while (reader.hasNext()) {
-        p = reader.next(p);
-        assertEquals(getIndex(s, p.getPixelData().getOffsets()), planeIdx);
-        checkPlane(p, s);
-        planeIdx++;
+      List<Integer> indices = checkAvroRecords(s, avroFiles[s]);
+      assertEquals(indices.size(), PLANES_COUNT[s]);
+      for (int i = 0; i < indices.size(); i++) {
+        assertEquals(indices.get(i).intValue(), i);
       }
-      assertEquals(planeIdx, PLANES_COUNT[s]);
-      reader.close();
     }
   }
 
