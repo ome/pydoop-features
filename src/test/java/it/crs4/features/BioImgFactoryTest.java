@@ -212,38 +212,47 @@ public class BioImgFactoryTest {
     }
   }
 
-  @Test
-  public void testWriteSeries() throws Exception {
+  private File[] dumpToAvro() throws Exception {
     String imgFn = target.getAbsolutePath();
     LOGGER.info("Image file: {}", imgFn);
-    IFormatReader iReader = new ImageReader();
-    iReader.setId(imgFn);
-    BioImgFactory factory = new BioImgFactory(iReader, imgFn);
+    IFormatReader reader = new ImageReader();
+    reader.setId(imgFn);
+    BioImgFactory factory = new BioImgFactory(reader, imgFn);
     assertEquals(factory.getSeriesCount(), SERIES_COUNT);
+    File[] avroFiles = new File[SERIES_COUNT];
     for (int s = 0; s < SERIES_COUNT; s++) {
       LOGGER.info("Series: {}", s);
       String name = String.format("%s_%d", NAME, s);
       File avroF = wd.newFile(String.format("%s.avro", name));
       String avroFn = avroF.getAbsolutePath();
       LOGGER.info("Avro file: {}", avroFn);
+      avroFiles[s] = avroF;
       factory.setSeries(s);
       assertEquals(factory.getSeries(), s);
       factory.writeSeries(name, avroFn);
-      //--
-      DataFileReader<BioImgPlane> aReader = new DataFileReader<BioImgPlane>(
-        avroF, new SpecificDatumReader<BioImgPlane>(BioImgPlane.class)
+    }
+    reader.close();
+    return avroFiles;
+  }
+
+  @Test
+  public void testWriteSeries() throws Exception {
+    File[] avroFiles = dumpToAvro();
+    for (int s = 0; s < SERIES_COUNT; s++) {
+      DataFileReader<BioImgPlane> reader = new DataFileReader<BioImgPlane>(
+        avroFiles[s], new SpecificDatumReader<BioImgPlane>(BioImgPlane.class)
       );
       int planeIdx = 0;
       BioImgPlane p = null;
-      while (aReader.hasNext()) {
-        p = aReader.next(p);
+      while (reader.hasNext()) {
+        p = reader.next(p);
         assertEquals(getIndex(s, p.getPixelData().getOffsets()), planeIdx);
         checkPlane(p, s);
         planeIdx++;
       }
       assertEquals(planeIdx, PLANES_COUNT[s]);
+      reader.close();
     }
-    iReader.close();
   }
 
 }
