@@ -22,7 +22,7 @@ package it.crs4.features;
 
 import java.util.List;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Set;
 import java.nio.ByteBuffer;
 import java.io.IOException;
 import java.io.File;
@@ -112,7 +112,7 @@ public class BioImgFactory {
   }
 
   public BioImgPlane build(String name, int no, int x, int y, int w, int h,
-                           HashSet<Integer> zs, HashSet<Integer> ts)
+                           Set<Integer> zs, Set<Integer> ts)
       throws FormatException, IOException {
     if (w < 0) {
       w = shape.get(dimIdx[0]);
@@ -159,7 +159,7 @@ public class BioImgFactory {
 
   public void writeSeries(String name, String fileName,
                           int x, int y, int w, int h,
-                          HashSet<Integer> zs, HashSet<Integer> ts)
+                          Set<Integer> zs, Set<Integer> ts)
       throws FormatException, IOException {
     DataFileWriter<BioImgPlane> writer = new DataFileWriter<BioImgPlane>(
       new SpecificDatumWriter<BioImgPlane>(BioImgPlane.class)

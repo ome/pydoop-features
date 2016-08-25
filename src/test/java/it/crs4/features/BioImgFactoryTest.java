@@ -238,8 +238,7 @@ public class BioImgFactoryTest {
       avroFiles[s] = avroF;
       factory.setSeries(s);
       assertEquals(factory.getSeries(), s);
-      factory.writeSeries(name, avroFn, 0, 0, -1, -1,
-                          (HashSet) zs, (HashSet) ts);
+      factory.writeSeries(name, avroFn, 0, 0, -1, -1, zs, ts);
     }
     reader.close();
     return avroFiles;
@@ -273,8 +272,8 @@ public class BioImgFactoryTest {
 
   @Test
   public void testPlaneSubset() throws Exception {
-    HashSet<Integer> zs = new HashSet(Arrays.asList(0, 3));
-    HashSet<Integer> ts = new HashSet(Arrays.asList(1));
+    Set<Integer> zs = new HashSet(Arrays.asList(0, 3));
+    Set<Integer> ts = new HashSet(Arrays.asList(1));
     File[] avroFiles = dumpToAvro(zs, ts);
     for (int s = 0; s < SERIES_COUNT; s++) {
       List<Integer> expIndices = new ArrayList<Integer>();
