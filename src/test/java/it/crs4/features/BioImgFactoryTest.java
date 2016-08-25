@@ -21,14 +21,18 @@
 package it.crs4.features;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Collections;
 import java.util.Arrays;
+import java.util.UUID;
 import java.nio.ByteBuffer;
 
 import org.junit.Test;
@@ -214,6 +218,10 @@ public class BioImgFactoryTest {
   }
 
   private File[] dumpToAvro() throws Exception {
+    return dumpToAvro(null, null);
+  }
+
+  private File[] dumpToAvro(Set<Integer> zs, Set<Integer> ts) throws Exception {
     String imgFn = target.getAbsolutePath();
     LOGGER.info("Image file: {}", imgFn);
     IFormatReader reader = new ImageReader();
@@ -223,14 +231,14 @@ public class BioImgFactoryTest {
     File[] avroFiles = new File[SERIES_COUNT];
     for (int s = 0; s < SERIES_COUNT; s++) {
       LOGGER.info("Series: {}", s);
-      String name = String.format("%s_%d", NAME, s);
+      String name = String.format("%s_%d", UUID.randomUUID().toString(), s);
       File avroF = wd.newFile(String.format("%s.avro", name));
       String avroFn = avroF.getAbsolutePath();
       LOGGER.info("Avro file: {}", avroFn);
       avroFiles[s] = avroF;
       factory.setSeries(s);
       assertEquals(factory.getSeries(), s);
-      factory.writeSeries(name, avroFn);
+      factory.writeSeries(name, avroFn, 0, 0, -1, -1, (HashSet)zs, (HashSet)ts);
     }
     reader.close();
     return avroFiles;
@@ -259,6 +267,26 @@ public class BioImgFactoryTest {
       for (int i = 0; i < indices.size(); i++) {
         assertEquals(indices.get(i).intValue(), i);
       }
+    }
+  }
+
+  @Test
+  public void testPlaneSubset() throws Exception {
+    HashSet<Integer> zs = new HashSet(Arrays.asList(0, 3));
+    HashSet<Integer> ts = new HashSet(Arrays.asList(1));
+    File[] avroFiles = dumpToAvro(zs, ts);
+    for (int s = 0; s < SERIES_COUNT; s++) {
+      List<Integer> expIndices = new ArrayList<Integer>();
+      for (Integer z: zs) {
+        for (int c = 0; c < SIZE_C; c++) {
+          for (Integer t: ts) {
+            expIndices.add(getIndex(s, z, c, t));
+          }
+        }
+      }
+      Collections.sort(expIndices);
+      List<Integer> indices = checkAvroRecords(s, avroFiles[s]);
+      assertTrue(indices.equals(expIndices));
     }
   }
 
