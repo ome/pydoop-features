@@ -79,19 +79,19 @@ public class CSVReaderTest {
     } else {
       reader = new CSVReader(in, delimiter);
     }
-    List<List<String>> read_data = new ArrayList<List<String>>();
+    List<List<String>> readData = new ArrayList<List<String>>();
     List<String> row;
     while (true) {
       row = reader.getRow();
       if (null == row) {
         break;
       }
-      read_data.add(row);
+      readData.add(row);
     }
     reader.close();
-    assertEquals(read_data.size(), data.size());
-    for (int i = 0; i < read_data.size(); i++) {
-      assertEquals(read_data.get(i).size(), data.get(i).size());
+    assertEquals(readData.size(), data.size());
+    for (int i = 0; i < readData.size(); i++) {
+      assertEquals(readData.get(i).size(), data.get(i).size());
     }
   }
 

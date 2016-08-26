@@ -177,7 +177,7 @@ public class BioImgFactoryTest {
   private int checkPlane(BioImgPlane p, int seriesIdx) {
     ArraySlice a = p.getPixelData();
     List<Integer> offsets = a.getOffsets();
-    for (int i = 0; i < 2; i ++) {
+    for (int i = 0; i < 2; i++) {
       assertEquals(offsets.get(i).intValue(), 0);
     }
     // Other offsets checked implicitly: if wrong, fetched plane will be wrong
@@ -205,7 +205,7 @@ public class BioImgFactoryTest {
     List<Integer> deltas = a.getDeltas();
     assertEquals(deltas.get(0).intValue(), SIZE_X[seriesIdx]);
     assertEquals(deltas.get(1).intValue(), SIZE_Y[seriesIdx]);
-    for (int i = 2; i < 5; i ++) {
+    for (int i = 2; i < 5; i++) {
       assertEquals(deltas.get(i).intValue(), 1);
     }
     //--
@@ -238,7 +238,8 @@ public class BioImgFactoryTest {
       avroFiles[s] = avroF;
       factory.setSeries(s);
       assertEquals(factory.getSeries(), s);
-      factory.writeSeries(name, avroFn, 0, 0, -1, -1, (HashSet)zs, (HashSet)ts);
+      factory.writeSeries(name, avroFn, 0, 0, -1, -1,
+                          (HashSet) zs, (HashSet) ts);
     }
     reader.close();
     return avroFiles;
