@@ -108,16 +108,18 @@ public final class ImageToAvro {
       reader = new Memoizer(reader, memoWait, memoDir);
     }
 
-    HashSet<Integer> zs = new HashSet<Integer>();
+    HashSet<Integer> zs = null;
     if (cmd.hasOption("zsubset")) {
+      zs = new HashSet<Integer>();
       String zsubset = cmd.getOptionValue("zsubset");
       for (String s: zsubset.split(",")) {
         zs.add(Integer.parseInt(s));
       }
     }
 
-    HashSet<Integer> ts = new HashSet<Integer>();
+    HashSet<Integer> ts = null;
     if (cmd.hasOption("tsubset")) {
+      ts = new HashSet<Integer>();
       String tsubset = cmd.getOptionValue("tsubset");
       for (String s: tsubset.split(",")) {
         ts.add(Integer.parseInt(s));

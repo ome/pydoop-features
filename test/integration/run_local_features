@@ -60,7 +60,9 @@ def main():
     avro_output_dir = os.path.join(wd, "avro_out")
     img_output_dir = os.path.join(wd, "planes")
     run_serialize(IMG_FN, avro_input_dir)
-    for bn in os.listdir(avro_input_dir):
+    basenames = os.listdir(avro_input_dir)
+    assert len(basenames) > 0
+    for bn in basenames:
         fn = os.path.join(avro_input_dir, bn)
         run_deserialize(fn, img_output_dir)  # for visual inspection
         run_feature_calc(fn, avro_output_dir)
