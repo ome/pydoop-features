@@ -64,19 +64,19 @@ public class BioImgFactoryTest {
     BioImgFactoryTest.class);
 
   // independent
-  private static final String NAME = "pydoop_features_test";
-  private static final boolean LITTLE_ENDIAN = true;
-  private static final int PIXEL_TYPE = FormatTools.UINT16;
-  private static final DType EXPECTED_DTYPE = DType.UINT16;
-  private static final String DIM_ORDER = "XYCZT";
-  private static final int SERIES_COUNT = 2;
+  static final String NAME = "pydoop_features_test";
+  static final boolean LITTLE_ENDIAN = true;
+  static final int PIXEL_TYPE = FormatTools.UINT16;
+  static final DType EXPECTED_DTYPE = DType.UINT16;
+  static final String DIM_ORDER = "XYCZT";
+  static final int SERIES_COUNT = 2;
   // use different size{X,Y,Z} for the two series
-  private static final int[] SIZE_X = {512, 256};
-  private static final int[] SIZE_Y = {256, 128};
-  private static final int[] SIZE_Z = {5, 4};
-  private static final int EFF_SIZE_C = 1;
-  private static final int SIZE_T = 2;
-  private static final int SPP = 3;  // Samples per pixel (e.g., 3 for RGB)
+  static final int[] SIZE_X = {512, 256};
+  static final int[] SIZE_Y = {256, 128};
+  static final int[] SIZE_Z = {5, 4};
+  static final int EFF_SIZE_C = 1;
+  static final int SIZE_T = 2;
+  static final int SPP = 3;  // Samples per pixel (e.g., 3 for RGB)
 
   // dependent
   private static final int[] PLANE_SIZE = {
@@ -98,7 +98,7 @@ public class BioImgFactoryTest {
   private static final int SIZE_C = SPP * EFF_SIZE_C;
 
   private static byte[][][] data;
-  private static File target;
+  private static String imgFn;
 
   // store zct -> index mapping for all series
   private static List<Map<List<Integer>, Integer>> zct2i =
@@ -132,8 +132,12 @@ public class BioImgFactoryTest {
   @BeforeClass
   public static void makeImgFile() throws Exception {
     LOGGER.info("wd: {}", wd.getRoot());
-    target = wd.newFile(String.format("%s.ome.tiff", NAME));
-    String imgFn = target.getAbsolutePath();
+    imgFn = makeImgFile(wd);
+  }
+
+  public static String makeImgFile(TemporaryFolder dir) throws Exception {
+    String bn = String.format("%s.ome.tiff", NAME);
+    String fn = dir.newFile(bn).getAbsolutePath();
     String ptString = FormatTools.getPixelTypeString(PIXEL_TYPE);
     ServiceFactory factory = new ServiceFactory();
     OMEXMLService service = factory.getInstance(OMEXMLService.class);
@@ -144,7 +148,7 @@ public class BioImgFactoryTest {
     }
     IFormatWriter writer = new ImageWriter();
     writer.setMetadataRetrieve(meta);
-    writer.setId(imgFn);
+    writer.setId(fn);
     writer.setInterleaved(false);
     data = new byte[SERIES_COUNT][][];
     for (int s = 0; s < SERIES_COUNT; s++) {
@@ -159,7 +163,7 @@ public class BioImgFactoryTest {
     writer.close();
     //-- Store zct -> index mapping --
     IFormatReader reader = new ImageReader();
-    reader.setId(imgFn);
+    reader.setId(fn);
     reader = new ChannelSeparator(reader);
     for (int s = 0; s < SERIES_COUNT; s++) {
       reader.setSeries(s);
@@ -172,6 +176,7 @@ public class BioImgFactoryTest {
         }
       }
     }
+    return fn;
   }
 
   private int checkPlane(BioImgPlane p, int seriesIdx) {
@@ -222,7 +227,6 @@ public class BioImgFactoryTest {
   }
 
   private File[] dumpToAvro(Set<Integer> zs, Set<Integer> ts) throws Exception {
-    String imgFn = target.getAbsolutePath();
     LOGGER.info("Image file: {}", imgFn);
     IFormatReader reader = new ImageReader();
     reader.setId(imgFn);
@@ -238,8 +242,7 @@ public class BioImgFactoryTest {
       avroFiles[s] = avroF;
       factory.setSeries(s);
       assertEquals(factory.getSeries(), s);
-      factory.writeSeries(name, avroFn, 0, 0, -1, -1,
-                          (HashSet) zs, (HashSet) ts);
+      factory.writeSeries(name, avroFn, 0, 0, -1, -1, zs, ts);
     }
     reader.close();
     return avroFiles;
@@ -273,8 +276,8 @@ public class BioImgFactoryTest {
 
   @Test
   public void testPlaneSubset() throws Exception {
-    HashSet<Integer> zs = new HashSet(Arrays.asList(0, 3));
-    HashSet<Integer> ts = new HashSet(Arrays.asList(1));
+    Set<Integer> zs = new HashSet(Arrays.asList(0, 3));
+    Set<Integer> ts = new HashSet(Arrays.asList(1));
     File[] avroFiles = dumpToAvro(zs, ts);
     for (int s = 0; s < SERIES_COUNT; s++) {
       List<Integer> expIndices = new ArrayList<Integer>();

@@ -21,6 +21,7 @@
 package it.crs4.features;
 
 import java.io.File;
+import java.util.Set;
 import java.util.HashSet;
 
 import loci.formats.IFormatReader;
@@ -108,7 +109,7 @@ public final class ImageToAvro {
       reader = new Memoizer(reader, memoWait, memoDir);
     }
 
-    HashSet<Integer> zs = null;
+    Set<Integer> zs = null;
     if (cmd.hasOption("zsubset")) {
       zs = new HashSet<Integer>();
       String zsubset = cmd.getOptionValue("zsubset");
@@ -117,7 +118,7 @@ public final class ImageToAvro {
       }
     }
 
-    HashSet<Integer> ts = null;
+    Set<Integer> ts = null;
     if (cmd.hasOption("tsubset")) {
       ts = new HashSet<Integer>();
       String tsubset = cmd.getOptionValue("tsubset");
