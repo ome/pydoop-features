@@ -94,9 +94,9 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
-          <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
-          </descriptorRefs>
+          <descriptors>
+            <descriptor>src/assembly/deps-and-log-config.xml</descriptor>
+          </descriptors>
           <appendAssemblyId>false</appendAssemblyId>
         </configuration>
         <executions>
