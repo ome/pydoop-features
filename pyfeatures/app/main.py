@@ -20,12 +20,11 @@
 Pyfeatures command line tool.
 """
 
+import sys
 import argparse
-import errno
 import importlib
-import os
 
-from .common import log_level
+from .common import get_log_level, get_logger
 
 
 VERSION = "NOT_TAGGED_YET"
@@ -39,6 +38,13 @@ SUBMOD_NAMES = [
 ]
 
 
+def log_level(s):
+    try:
+        return get_log_level(s)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(e.message)
+
+
 def make_parser():
     parser = argparse.ArgumentParser(
         description=__doc__,
@@ -48,30 +54,17 @@ def make_parser():
                         help='print version tag and exit')
     parser.add_argument('--log-level', metavar="LEVEL", type=log_level,
                         default="INFO", help="logging level")
-    parser.add_argument('--stdout', help="Redirect stdout to this file")
-    parser.add_argument('--stderr', help="Redirect stderr to this file")
-    subparsers = parser.add_subparsers(help="sub-commands")
+    subparsers = parser.add_subparsers(help="sub-commands", dest="command")
     for n in SUBMOD_NAMES:
         mod = importlib.import_module("%s.%s" % (__package__, n))
         mod.add_parser(subparsers)
     return parser
 
 
-def create_log_dirs(args):
-    for f in [args.stdout, args.stderr]:
-        d = os.path.dirname(f) if f else None
-        if d:
-            try:
-                os.makedirs(d)
-            except OSError as e:
-                if e.errno == errno.EEXIST and os.path.isdir(d):
-                    pass
-                else:
-                    raise
-
-
 def main(argv=None):
     parser = make_parser()
     args, extra_argv = parser.parse_known_args(argv)
-    create_log_dirs(args)
-    args.func(args, extra_argv=extra_argv)
+    logger = get_logger(args.command, level=args.log_level, f=sys.stdout)
+    logger.info("START")
+    args.func(logger, args, extra_argv=extra_argv)
+    logger.info("STOP")

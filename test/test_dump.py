@@ -18,7 +18,6 @@
 
 import anydbm
 import cPickle
-import logging
 import os
 import re
 import shelve
@@ -32,8 +31,9 @@ import pyfeatures.pyavroc_emu as pyavroc_emu
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import pyfeatures.app.dump as dump
+from pyfeatures.app.common import NullLogger
 
-
+LOGGER = NullLogger()
 SCHEMA = """{
   "type": "record",
   "name": "Foo",
@@ -49,7 +49,6 @@ class Args(object):
             raise ValueError("arg 'in_fn' is required")
         for k in "in_fn", "num_records", "out_fn", "format":
             setattr(self, k, kw.get(k))
-        self.log_level = logging.CRITICAL
 
 
 class Base(unittest.TestCase):
@@ -79,7 +78,7 @@ class TestDb(Base):
         self.args = Args(in_fn=self.fn, out_fn=self.out_fn, format="db")
 
     def test_full(self):
-        dump.run(self.args)
+        dump.run(LOGGER, self.args)
         self.assertTrue(os.path.isfile(self.out_fn))
         with closing(shelve.open(self.out_fn, flag="r")) as shelf:
             for i, r in enumerate(self.records):
@@ -87,7 +86,7 @@ class TestDb(Base):
 
     def test_num_records(self):
         self.args.num_records = 1
-        dump.run(self.args)
+        dump.run(LOGGER, self.args)
         self.assertTrue(os.path.isfile(self.out_fn))
         with closing(shelve.open(self.out_fn, flag="r")) as shelf:
             self.assertEqual(shelf["0"], self.records[0])
@@ -97,7 +96,7 @@ class TestDb(Base):
         with open(self.out_fn, "w") as f:
             f.write("")
         try:
-            dump.run(self.args)
+            dump.run(LOGGER, self.args)
         except anydbm.error as e:
             self.fail("db creation failed: %s" % e)
 
@@ -117,7 +116,7 @@ class TestPickle(Base):
         self.__run_test(self.args, self.records[:1])
 
     def __run_test(self, args, exp_records):
-        dump.run(args)
+        dump.run(LOGGER, args)
         self.assertTrue(os.path.isfile(self.out_fn))
         with open(self.out_fn) as f:
             records = cPickle.load(f)
@@ -139,7 +138,7 @@ class TestTxt(Base):
         self.__run_test(self.args, self.records[:1])
 
     def __run_test(self, args, exp_records):
-        dump.run(args)
+        dump.run(LOGGER, args)
         self.assertTrue(os.path.isfile(self.out_fn))
         self.assertEqual(self.__get_records(), exp_records)
 

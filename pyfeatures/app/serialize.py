@@ -27,7 +27,7 @@ import subprocess as sp
 from pyfeatures import JAR_PATH
 
 
-def run(args, extra_argv=None):
+def run(logger, args, extra_argv=None):
     if extra_argv is None:
         extra_argv = []
     java = ["java", "-cp", JAR_PATH]
@@ -35,22 +35,12 @@ def run(args, extra_argv=None):
         for prop in args.java_d:
             java.append('-D%s' % prop)
     sp_argv = java + ["it.crs4.features.ImageToAvro"] + extra_argv
-    stdout = None
-    stderr = None
+    logger.debug("subprocess args: %r", sp_argv)
     try:
-        if args.stdout:
-            stdout = open(args.stdout, 'a')
-        if args.stderr:
-            stderr = open(args.stderr, 'a')
-        sp.check_call(sp_argv, stdout=stdout, stderr=stderr)
+        sp.check_call(sp_argv)
     except sp.CalledProcessError:
         if extra_argv:
             raise
-
-    if stdout:
-        stdout.close()
-    if stderr:
-        stderr.close()
     return 0
 
 

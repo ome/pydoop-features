@@ -28,7 +28,6 @@ import sys
 import os
 import warnings
 import errno
-import logging
 
 try:
     from pyavroc import AvroFileReader, AvroFileWriter
@@ -40,22 +39,8 @@ from pyfeatures.bioimg import BioImgPlane
 from pyfeatures.feature_calc import calc_features, to_avro
 from pyfeatures.schema import Signatures as out_schema
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)-15s %(levelname)s: [%(module)s] %(message)s'
-)
 
-
-def run(args, extra_argv=None):
-    if args.stderr:
-        # Log to file instead of default stderr
-        fileh = logging.FileHandler(args.stderr)
-        rootlogger = logging.getLogger()
-        for h in rootlogger.handlers:
-            rootlogger.removeHandler(h)
-        rootlogger.addHandler(fileh)
-    logger = logging.getLogger("calc")
-    logger.setLevel(args.log_level)
+def run(logger, args, extra_argv=None):
     try:
         os.makedirs(args.out_dir)
     except OSError as e:
@@ -85,7 +70,6 @@ def run(args, extra_argv=None):
                         out_rec[name] = getattr(p, name)
                     writer.write(out_rec)
         writer.close()
-    logger.info("All done")
     return 0
 
 
