@@ -15,6 +15,7 @@ RUN yum -y install \
     python27 \
     python27-devel \
     python27-scipy \
+    python27-tkinter \
     swig \
     tar
 RUN echo ". /opt/rh/python27/enable" >/etc/profile.d/python.sh

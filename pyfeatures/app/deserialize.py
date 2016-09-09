@@ -45,7 +45,7 @@ def iterplanes(avro_file):
             yield BioImgPlane(r)
 
 
-def run(args, extra_argv=None):
+def run(logger, args, extra_argv=None):
     try:
         os.makedirs(args.out_dir)
     except OSError as e:
@@ -54,6 +54,7 @@ def run(args, extra_argv=None):
     for p in iterplanes(args.avro_file):
         pixels = p.get_xy()
         out_tag = '%s-z%04d-c%04d-t%04d' % (p.name, p.z, p.c, p.t)
+        logger.info("writing plane %s", out_tag)
         if args.img:
             out_fn = os.path.join(args.out_dir, '%s.tif' % out_tag)
             with closing(TIFF.open(out_fn, mode="w")) as fo:

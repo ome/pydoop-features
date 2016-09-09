@@ -25,7 +25,6 @@ suitable for very large files.
 """
 
 import cPickle
-import logging
 import os
 import pprint
 import shelve
@@ -37,8 +36,6 @@ try:
 except ImportError:
     from pyfeatures.pyavroc_emu import AvroFileReader
     warnings.warn("pyavroc not found, using standard avro lib\n")
-
-logging.basicConfig(level=logging.INFO)
 
 
 FORMATS = "db", "pickle", "txt"
@@ -100,12 +97,11 @@ def add_parser(subparsers):
     return parser
 
 
-def run(args, extra_argv=None):
-    logger = logging.getLogger("dump")
-    logger.setLevel(args.log_level)
+def run(logger, args, extra_argv=None):
     if not args.out_fn:
         tag = os.path.splitext(os.path.basename(args.in_fn))[0]
         args.out_fn = "%s.%s" % (tag, args.format)
+    logger.info("writing to %s", args.out_fn)
     with open(args.in_fn) as f:
         records = iter_records(f, logger, num_records=args.num_records)
         Writer(args.format, args.out_fn).write(records)

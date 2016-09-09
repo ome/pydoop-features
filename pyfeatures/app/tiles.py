@@ -21,15 +21,11 @@ Generate tiles according to the given parameters and output a
 visual representation of the resulting coverage.
 """
 
-import logging
-
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 from pyfeatures.feature_calc import gen_tiles
-
-logging.basicConfig(level=logging.INFO)
 
 
 IMG_ALPHA = 0.2
@@ -51,9 +47,7 @@ def add_parser(subparsers):
     return parser
 
 
-def run(args, extra_argv=None):
-    logger = logging.getLogger("tiles")
-    logger.setLevel(args.log_level)
+def run(logger, args, extra_argv=None):
     img_array = np.zeros((args.iH, args.iW), dtype="i1")
     fig = plt.figure()
     ax = fig.add_subplot(111, aspect='equal')

@@ -30,7 +30,6 @@ import sys
 import errno
 import cPickle
 import shelve
-import logging
 import warnings
 from contextlib import closing
 
@@ -42,8 +41,6 @@ except ImportError:
     from pyfeatures.pyavroc_emu import AvroFileReader
     warnings.warn("pyavroc not found, using standard avro lib\n")
 from pyfeatures.feature_names import FEATURE_NAMES
-
-logging.basicConfig(level=logging.INFO)
 
 
 AXES = "z", "c", "t"
@@ -136,9 +133,7 @@ def add_parser(subparsers):
     return parser
 
 
-def run(args, extra_argv=None):
-    logger = logging.getLogger("plot")
-    logger.setLevel(args.log_level)
+def run(logger, args, extra_argv=None):
     try:
         os.makedirs(args.out_dir)
     except OSError as e:

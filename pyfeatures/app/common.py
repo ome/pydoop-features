@@ -17,7 +17,6 @@
 # END_COPYRIGHT
 
 import logging
-from argparse import ArgumentTypeError
 
 LOG_LEVELS = frozenset([
     "CRITICAL",
@@ -29,13 +28,39 @@ LOG_LEVELS = frozenset([
     "WARN",
     "WARNING",
 ])
+LOG_FORMAT = "%(asctime)s %(levelname)s: [%(name)s] %(message)s"
 
 
-def log_level(s):
+def get_log_level(s):
     try:
         return int(s)
     except ValueError:
-        if s in LOG_LEVELS:
-            return getattr(logging, s)
+        level_name = s.upper()
+        if level_name in LOG_LEVELS:
+            return getattr(logging, level_name)
         else:
-            raise ArgumentTypeError("%r is not a valid log level" % (s,))
+            raise ValueError("%r is not a valid log level" % (s,))
+
+
+def get_logger(name, level="INFO", f=None, mode="a"):
+    logger = logging.getLogger(name)
+    logger.setLevel(get_log_level(level))
+    if isinstance(f, basestring):
+        handler = logging.FileHandler(f, mode=mode)
+    else:
+        handler = logging.StreamHandler(f)
+    handler.setFormatter(logging.Formatter(LOG_FORMAT))
+    logger.addHandler(handler)
+    return logger
+
+
+class _NullHandler(logging.Handler):
+    def emit(self, record):
+        pass
+
+
+class NullLogger(logging.Logger):
+    def __init__(self):
+        logging.Logger.__init__(self, "null")
+        self.propagate = 0
+        self.handlers = [_NullHandler()]
