@@ -1,0 +1,5 @@
+- hosts: localhost
+  roles:
+  - role: openmicroscopy.ice
+  vars:
+  - ice_version: "3.6"

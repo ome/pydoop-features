@@ -19,6 +19,18 @@ RUN bash -ic "python setup.py install"
 RUN yum -y install tkinter
 
 RUN useradd -m features
+RUN pip install omego \
+ && omego download server --release=0.3.3 --downloadurl=https://downloads.openmicroscopy.org/idr
+
+RUN find /build -type d -name "OMERO.server*" -maxdepth 1 -exec ln -s {} /build/OMERO.server \;
+RUN printf 'PATH=$PATH:/build/OMERO.server/bin\n' > /etc/profile.d/omero.sh \
+    printf 'PYTHONPATH=$PYTHONPATH:/build/OMERO.server/lib/python\n' >> /etc/profile.d/omero.sh
+
+COPY docker/centos7/deps.yml /build/
+RUN yum -y install epel-release \
+ && yum -y install ansible
+RUN ansible-galaxy install openmicroscopy.ice \
+ && ansible-playbook /build/deps.yml
 
 USER features
 ENV HOME /home/features
