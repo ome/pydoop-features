@@ -17,8 +17,8 @@ yum -y install \
     scipy \
     swig
 
-bash install_maven.sh
-bash install_pydoop_features.sh
-bash install_pyavroc.sh
+bash /build/install_maven.sh
+bash /build/install_wnd_charm.sh
+bash /build/install_pyavroc.sh
 
 yum clean all
