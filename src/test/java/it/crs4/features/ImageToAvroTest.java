@@ -1,7 +1,7 @@
 /**
  * BEGIN_COPYRIGHT
  *
- * Copyright (C) 2016 Open Microscopy Environment:
+ * Copyright (C) 2016-2017 Open Microscopy Environment:
  *   - University of Dundee
  *   - CRS4
  *
