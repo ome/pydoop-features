@@ -24,7 +24,7 @@ RUN pip install omego \
 
 RUN find /build -type d -name "OMERO.server*" -maxdepth 1 -exec ln -s {} /build/OMERO.server \;
 RUN printf 'PATH=$PATH:/build/OMERO.server/bin\n' > /etc/profile.d/omero.sh \
-    printf 'PYTHONPATH=$PYTHONPATH:/build/OMERO.server/lib/python\n' >> /etc/profile.d/omero.sh
+ && printf 'PYTHONPATH=$PYTHONPATH:/build/OMERO.server/lib/python\n' >> /etc/profile.d/omero.sh
 
 COPY docker/centos7/deps.yml /build/
 RUN yum -y install epel-release \
