@@ -32,6 +32,8 @@ RUN yum -y install epel-release \
 RUN ansible-galaxy install openmicroscopy.ice \
  && ansible-playbook /build/deps.yml
 
+RUN printf '/build/OMERO.server/lib/python\n' > /usr/lib/python2.7/site-packages/omero.pth
+
 USER features
 ENV HOME /home/features
 
