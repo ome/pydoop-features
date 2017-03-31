@@ -20,7 +20,7 @@ RUN yum -y install tkinter
 
 RUN useradd -m features
 RUN pip install omego \
- && omego download server --release=0.3.3 --downloadurl=https://downloads.openmicroscopy.org/idr
+ && omego download py
 
 RUN find /build -type d -name "OMERO.server*" -maxdepth 1 -exec ln -s {} /build/OMERO.server \;
 RUN printf 'PATH=$PATH:/build/OMERO.server/bin\n' > /etc/profile.d/omero.sh \

@@ -17,8 +17,8 @@
   <url>https://github.com/openmicroscopy/pydoop-features</url>
 
   <properties>
-    <bio-formats.groupid>idr</bio-formats.groupid>
-    <bio-formats.version>0.3.0</bio-formats.version>
+    <bio-formats.groupid>ome</bio-formats.groupid>
+    <bio-formats.version>5.3.0</bio-formats.version>
     <slf4j.version>1.7.7</slf4j.version>
     <log4j.version>1.2.17</log4j.version>
     <hadoop.version>2.6.0</hadoop.version>
