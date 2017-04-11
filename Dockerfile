@@ -17,6 +17,8 @@ COPY scripts /build/scripts
 COPY src /build/src
 COPY pom.xml setup.py setup.cfg /build/
 
+ARG BIOFORMATS_GROUPID
+ARG BIOFORMATS_VERSION
 RUN bash build.sh
 
 RUN bash -ic "python setup.py install"
