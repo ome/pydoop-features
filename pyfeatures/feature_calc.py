@@ -56,6 +56,7 @@ def gen_tiles(img_array, w=None, h=None, dx=None, dy=None, ox=None, oy=None):
         raise ValueError("smallest tile size is 1 x 1")
     if dx < 1 or dy < 1:
         raise ValueError("smallest distance between tiles is 1")
+    # min(...): a maximum of one partial tile in that dimension
     for i in xrange(oy, min(H, H - h + dy), dy):
         for j in xrange(ox, min(W, W - w + dx), dx):
             yield i, j, img_array[i: i + h, j: j + w]
