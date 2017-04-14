@@ -33,5 +33,8 @@ RUN printf 'PATH=$PATH:/build/OMERO.py/bin\n' > /etc/profile.d/omero.sh && \
 
 USER features
 ENV HOME /home/features
+# This is needed when running as a different user since some Python eggs
+# need to be unzipped
+ENV PYTHON_EGG_CACHE=/tmp/python-eggs
 
 ENTRYPOINT ["/usr/bin/pyfeatures"]
