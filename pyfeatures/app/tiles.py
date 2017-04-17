@@ -62,7 +62,8 @@ def run(logger, args, extra_argv=None):
     my = max(1, .05 * args.iH)
     ax.axis([-mx, args.iW + mx, -my, args.iH + my])
     for i, j, tile in gen_tiles(img_array, w=args.W, h=args.H,
-                                dx=args.x, dy=args.y):
+                                dx=args.x, dy=args.y,
+                                ox=args.offset_x, oy=args.offset_y):
         h, w = tile.shape
         ax.add_patch(patches.Rectangle((j, i), w, h, alpha=TILE_ALPHA))
         logger.debug("%r", (j, i, w, h))
