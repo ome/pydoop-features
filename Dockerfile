@@ -5,8 +5,6 @@ COPY docker/centos7 /build
 
 RUN yum -y -q install epel-release && \
     yum -y -q install ansible
-# git is needed until openmicroscopy.omego is put on galaxy
-RUN yum -y -q install git
 RUN ansible-galaxy install -r /build/requirements.yml && \
     ansible-playbook /build/deps.yml
 
