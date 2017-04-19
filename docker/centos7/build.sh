@@ -1,6 +1,17 @@
 #!/bin/bash
 
-set -eux
+set -ex
+
+if [ -n "$BIOFORMATS_GROUPID" ]; then
+    sed -i -re \
+    "s%(<bio-formats.groupid>).+(</bio-formats.groupid>)%\1$BIOFORMATS_GROUPID\2%" \
+    pom.xml
+fi
+if [ -n "$BIOFORMATS_VERSION" ]; then
+    sed -i -re \
+    "s%(<bio-formats.version>).+(</bio-formats.version>)%\1$BIOFORMATS_VERSION\2%" \
+    pom.xml
+fi
 
 yum -y install epel-release
 yum -y install \

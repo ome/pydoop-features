@@ -40,7 +40,7 @@ CLASSIFIERS = [
 
 
 def build_java():
-    sp.check_call(["mvn", "clean", "compile", "assembly:single"])
+    sp.check_call(["mvn", "-B", "clean", "compile", "assembly:single"])
 
 
 def write_schema_module():

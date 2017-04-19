@@ -41,10 +41,10 @@ install:
   - python setup.py install
 
 before_script:
-  - mvn checkstyle:check
-  - flake8 -v .
+  - mvn -B checkstyle:check
+  - flake8 .
 
 script:
-  - mvn test
+  - mvn -B test
   - python test/all_tests.py
   - ./test/integration/run_local_features
