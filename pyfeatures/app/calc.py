@@ -65,6 +65,8 @@ def run(logger, args, extra_argv=None):
                     'h': args.height,
                     'dx': args.delta_x,
                     'dy': args.delta_y,
+                    'ox': args.offset_x,
+                    'oy': args.offset_y,
                 }
                 for fv in calc_features(pixels, p.name, **kw):
                     out_rec = to_avro(fv)
@@ -90,5 +92,9 @@ def add_parser(subparsers):
                         help="horizontal distance between consecutive tiles")
     parser.add_argument("-y", "--delta-y", type=int, metavar="INT",
                         help="vertical distance between consecutive tiles")
+    parser.add_argument("--offset-x", type=int, metavar="INT",
+                        help="horizontal offset of first tile (default 0)")
+    parser.add_argument("--offset-y", type=int, metavar="INT",
+                        help="vertical offset of first tile (default 0)")
     parser.set_defaults(func=run)
     return parser

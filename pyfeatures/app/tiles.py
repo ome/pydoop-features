@@ -43,6 +43,10 @@ def add_parser(subparsers):
     parser.add_argument("-H", type=int, metavar="INT", help="tile height")
     parser.add_argument("-x", type=int, metavar="INT", help="tile x-distance")
     parser.add_argument("-y", type=int, metavar="INT", help="tile y-distance")
+    parser.add_argument("--offset-x", type=int, metavar="INT",
+                        help="tile initial x-offset")
+    parser.add_argument("--offset-y", type=int, metavar="INT",
+                        help="tile initial y-offset")
     parser.add_argument('-o', '--out-fn', metavar='FILE', default="tiles.png",
                         help="output file (extension = img format)")
     parser.set_defaults(func=run)
@@ -58,7 +62,8 @@ def run(logger, args, extra_argv=None):
     my = max(1, .05 * args.iH)
     ax.axis([-mx, args.iW + mx, -my, args.iH + my])
     for i, j, tile in gen_tiles(img_array, w=args.W, h=args.H,
-                                dx=args.x, dy=args.y):
+                                dx=args.x, dy=args.y,
+                                ox=args.offset_x, oy=args.offset_y):
         h, w = tile.shape
         ax.add_patch(patches.Rectangle((j, i), w, h, alpha=TILE_ALPHA))
         logger.debug("%r", (j, i, w, h))
