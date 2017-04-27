@@ -35,8 +35,6 @@ import shelve
 import warnings
 from contextlib import closing
 
-import matplotlib.pyplot as plt
-
 try:
     from pyavroc import AvroFileReader
 except ImportError:
@@ -99,6 +97,7 @@ def get_data(fn, axis, feature=None, x=None, y=None):
 
 
 def plot_data(data, axis, out_dir, logger):
+    import matplotlib.pyplot as plt
     other_axes = [_ for _ in AXES if _ != axis]
     for k1, v1 in data.iteritems():
         logger.debug("%r = %r", other_axes, k1)

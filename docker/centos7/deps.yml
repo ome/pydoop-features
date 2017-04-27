@@ -1,0 +1,7 @@
+- hosts: localhost
+  roles:
+  - role: openmicroscopy.omego
+  - role: openmicroscopy.omero-python-deps
+  - role: openmicroscopy.ice
+  vars:
+  - ice_version: "3.6"

@@ -24,8 +24,6 @@ visual representation of the resulting coverage.
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 
 from pyfeatures.feature_calc import gen_tiles
 
@@ -54,6 +52,9 @@ def add_parser(subparsers):
 
 
 def run(logger, args, extra_argv=None):
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as patches
+
     img_array = np.zeros((args.iH, args.iW), dtype="i1")
     fig = plt.figure()
     ax = fig.add_subplot(111, aspect='equal')
