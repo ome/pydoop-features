@@ -206,7 +206,7 @@ def main(argv):
             init_needed = not os.path.exists(fileout)
             cols = convert_avro(
                 f, omero_ids, id_fields, expected_features,
-                args.re_pattern,args.re_match)
+                args.re_pattern, args.re_match)
             t = omero.tables.HDFLIST.getOrCreate(fileout)
             if init_needed:
                 t.initialize(cols)
