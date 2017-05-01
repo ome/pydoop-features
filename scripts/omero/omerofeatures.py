@@ -59,6 +59,16 @@ def parse_args(args):
     parser.add_argument(
         'mapping', help='Mapping of OMERO IDs to avro records (tsv)')
     parser.add_argument(
+        '--re-pattern', default='.*', help=(
+            'Match a substring of the avros name against the mapping file, '
+            'e.g. "^[A-Za-z0-9]" to ignore everything after an '
+            'alpha-numeric prefix.'))
+    parser.add_argument(
+        '--re-match', help=(
+            'Match a replacement pattern based on --re-pattern. '
+            'E.g. "(\1)-(\2)" to match two pattern groups joined with "-". '
+            'Default is to match the whole pattern.'))
+    parser.add_argument(
         'output', help='Output OMERO.features file (append if exists)')
     parser.add_argument('inputs', nargs='+', help='Input avro files')
     return parser.parse_args(args)
@@ -126,13 +136,15 @@ exclude_fields = (
 )
 
 
-def convert_avro(f, omero_ids, id_fields, expected_features):
+def convert_avro(
+        f, omero_ids, id_fields, expected_features, repattern, rematch):
     """
     f: File handle to the input file
     omero_ids: Maps of plate-series to OMERO IDs
     id_fields: A list of ID columns: [(NameID, Type)]
     expected_features: The list of expected features, if empty this will be
     populated by the first avro record
+    repattern, rematch: Match map screen name against a regular expression
     """
     cols = []
     a = AvroFileReader(f)
@@ -169,7 +181,12 @@ def convert_avro(f, omero_ids, id_fields, expected_features):
 
         for c in cols:
             if c.name.endswith('ID'):
-                oid = omero_ids[c.name][r['name']]
+                if rematch:
+                    rname = re.sub(repattern, rematch, r['name'])
+                else:
+                    rname = re.search(repattern, r['name']).group(0)
+                print repattern, rematch, r['name'], rname
+                oid = omero_ids[c.name][rname]
                 c.values.append(oid)
             else:
                 c.values.append(r[c.name])
@@ -188,7 +205,9 @@ def main(argv):
         with open(avroin) as f:
             print 'Converting %s' % avroin
             init_needed = not os.path.exists(fileout)
-            cols = convert_avro(f, omero_ids, id_fields, expected_features)
+            cols = convert_avro(
+                f, omero_ids, id_fields, expected_features,
+                args.re_pattern,args.re_match)
             t = omero.tables.HDFLIST.getOrCreate(fileout)
             if init_needed:
                 t.initialize(cols)
