@@ -60,13 +60,13 @@ def parse_args(args):
         'mapping', help='Mapping of OMERO IDs to avro records (tsv)')
     parser.add_argument(
         '--re-pattern', default='.*', help=(
-            'Match a substring of the avros name against the mapping file, '
+            'Match a substring of the avro name against the mapping file, '
             'e.g. "^[A-Za-z0-9]" to ignore everything after an '
             'alpha-numeric prefix.'))
     parser.add_argument(
         '--re-match', help=(
             'Match a replacement pattern based on --re-pattern. '
-            'E.g. "(\1)-(\2)" to match two pattern groups joined with "-". '
+            'E.g. "\1-\2" to match two pattern groups joined with "-". '
             'Default is to match the whole pattern.'))
     parser.add_argument(
         'output', help='Output OMERO.features file (append if exists)')
@@ -185,7 +185,6 @@ def convert_avro(
                     rname = re.sub(repattern, rematch, r['name'])
                 else:
                     rname = re.search(repattern, r['name']).group(0)
-                print repattern, rematch, r['name'], rname
                 oid = omero_ids[c.name][rname]
                 c.values.append(oid)
             else:
