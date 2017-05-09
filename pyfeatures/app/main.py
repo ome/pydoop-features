@@ -36,6 +36,7 @@ SUBMOD_NAMES = [
     "dump",
     "plot",
     "serialize",
+    "summarize",
     "tiles",
 ]
 
