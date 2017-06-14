@@ -9,12 +9,12 @@ python get-pip.py
 pip install avro libtiff matplotlib
 
 # clone dependencies with depth=1 to speed things up
-git clone --depth=1 --branch='metadata52/merge/trigger' \
+git clone --depth=1 --branch='metadata54/merge/trigger' \
     https://github.com/snoopycrimecop/bioformats.git
 git clone --depth=1 --branch='master' \
     https://github.com/wnd-charm/wnd-charm.git
 
-git clone --branch='ztsubset+docker' https://github.com/manics/pydoop-features.git
+git clone --branch='master' https://github.com/openmicroscopy/pydoop-features.git
 
 # the Maven build needs to find a tag, but we've cut the history to depth 1
 tag="v$(python set_bf_ver.py -n)"
@@ -32,6 +32,7 @@ python setup.py install
 popd
 
 pushd pydoop-features
+sed -i -re "s%(<bio-formats.groupid>).+(</bio-formats.groupid>)%\1idr\2%" pom.xml
 python setup.py install
 popd
 
