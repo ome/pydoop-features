@@ -30,6 +30,7 @@ import sys
 import os
 import warnings
 import errno
+from argparse import ArgumentTypeError
 
 try:
     from pyavroc import AvroFileReader, AvroFileWriter
@@ -57,6 +58,12 @@ def run(logger, args, extra_argv=None):
             reader = AvroFileReader(fin)
             for r in reader:
                 p = BioImgPlane(r)
+                if args.zsubset and p.z not in args.zsubset:
+                    continue
+                if args.csubset and p.c not in args.csubset:
+                    continue
+                if args.tsubset and p.t not in args.tsubset:
+                    continue
                 pixels = p.get_xy()
                 logger.info('processing %r', [p.z, p.c, p.t])
                 kw = {
@@ -75,6 +82,13 @@ def run(logger, args, extra_argv=None):
                     writer.write(out_rec)
         writer.close()
     return 0
+
+
+def int_set(s):
+    try:
+        return set(int(_) for _ in s.split(","))
+    except ValueError as e:
+        raise ArgumentTypeError(e.message)
 
 
 def add_parser(subparsers):
@@ -96,5 +110,11 @@ def add_parser(subparsers):
                         help="horizontal offset of first tile (default 0)")
     parser.add_argument("--offset-y", type=int, metavar="INT",
                         help="vertical offset of first tile (default 0)")
+    parser.add_argument("-z", "--zsubset", type=int_set, metavar="INT,INT,...",
+                        help="process only planes with these Z coordinates")
+    parser.add_argument("-c", "--csubset", type=int_set, metavar="INT,INT,...",
+                        help="process only planes with these C coordinates")
+    parser.add_argument("-t", "--tsubset", type=int_set, metavar="INT,INT,...",
+                        help="process only planes with these T coordinates")
     parser.set_defaults(func=run)
     return parser
