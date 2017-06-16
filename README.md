@@ -18,7 +18,7 @@ How
 The fastest way to get a working installation is to pull the
 [Docker](https://www.docker.com) image:
 
-    docker pull simleo/pyfeatures
+    docker pull imagedata/pyfeatures
 
 Java-Python interoperability is achieved via Avro. The input dataset
 can be in [any format supported by
@@ -28,7 +28,7 @@ instance, download
 and unpack it under `/tmp`. The first step is to serialize this data
 to Avro:
 
-    docker run -u ${UID} --rm -v /tmp:/tmp simleo/pyfeatures \
+    docker run -u ${UID} --rm -v /tmp:/tmp imagedata/pyfeatures \
       serialize /tmp/MF-2CH-Z-T.tif -o /tmp/
 
 You should get one avro container file per image series in the input
@@ -38,7 +38,7 @@ dataset. In this case:
 
 To compute features for the first avro container:
 
-    docker run -u ${UID} --rm -v /tmp:/tmp simleo/pyfeatures \
+    docker run -u ${UID} --rm -v /tmp:/tmp imagedata/pyfeatures \
       calc /tmp/MF-2CH-Z-T_0.avro -o /tmp/
 
 You might want to get a cup of coffee, feature calculation takes time.
