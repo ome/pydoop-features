@@ -21,12 +21,13 @@
 """\
 Dump the contents of an Avro container to a different format.
 
-WARNING: the 'pickle' format tries to read the whole Avro container
+WARNING: the 'pickle' and 'json' formats read the whole Avro container
 into memory in order to dump it as a single list, so it's **not**
 suitable for very large files.
 """
 
 import cPickle
+import json
 import os
 import pprint
 import shelve
@@ -40,7 +41,7 @@ except ImportError:
     warnings.warn("pyavroc not found, using standard avro lib\n")
 
 
-FORMATS = "db", "pickle", "txt"
+FORMATS = "db", "pickle", "txt", "json"
 PROTOCOL = cPickle.HIGHEST_PROTOCOL
 
 
@@ -85,6 +86,11 @@ class Writer(object):
             pp = pprint.PrettyPrinter(stream=fo)
             for r in records:
                 pp.pprint(r)
+
+    def _write_json(self, records):
+        with open(self.out_fn, "w") as fo:
+            json.dump(list(records), fo,
+                      sort_keys=True, indent=1, separators=(',', ': '))
 
 
 def add_parser(subparsers):
