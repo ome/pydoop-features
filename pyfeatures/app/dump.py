@@ -22,7 +22,7 @@
 Dump the contents of an Avro container to a different format.
 
 WARNING: the 'pickle' and 'json' formats read the whole Avro container
-into memory in order to dump it as a single list, so it's **not**
+into memory in order to dump it as a single list, so they're **not**
 suitable for very large files.
 """
 
