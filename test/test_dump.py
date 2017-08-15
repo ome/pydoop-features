@@ -20,6 +20,7 @@
 
 import anydbm
 import cPickle
+import json
 import os
 import re
 import shelve
@@ -103,6 +104,28 @@ class TestDb(Base):
             self.fail("db creation failed: %s" % e)
 
 
+class TestJson(Base):
+
+    def setUp(self):
+        super(TestJson, self).setUp()
+        self.out_fn = os.path.join(self.wd, "foo.json")
+        self.args = Args(in_fn=self.fn, out_fn=self.out_fn, format="json")
+
+    def test_full(self):
+        self.__run_test(self.args, self.records)
+
+    def test_num_records(self):
+        self.args.num_records = 1
+        self.__run_test(self.args, self.records[:1])
+
+    def __run_test(self, args, exp_records):
+        dump.run(LOGGER, args)
+        self.assertTrue(os.path.isfile(self.out_fn))
+        with open(self.out_fn) as f:
+            records = json.load(f)
+            self.assertEqual(records, exp_records)
+
+
 class TestPickle(Base):
 
     def setUp(self):
@@ -150,7 +173,7 @@ class TestTxt(Base):
 
 
 def load_tests(loader, tests, pattern):
-    test_cases = (TestDb, TestPickle, TestTxt)
+    test_cases = (TestDb, TestJson, TestPickle, TestTxt)
     suite = unittest.TestSuite()
     for tc in test_cases:
         suite.addTests(loader.loadTestsFromTestCase(tc))
