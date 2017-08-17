@@ -44,19 +44,10 @@ from pyfeatures.schema import Signatures as out_schema
 
 
 def get_image_size(fin):
-    """
-    There doesn't seem to be a nicer way to get the dimensions
-    """
     reader = AvroFileReader(fin)
-    z = 0
-    c = 0
-    t = 0
-    for r in reader:
-        p = BioImgPlane(r)
-        z = max(z, p.z)
-        c = max(c, p.c)
-        t = max(t, p.t)
-    return z + 1, c + 1, t + 1
+    r = reader.next()
+    size_map = dict(zip(r['dimension_order'], r['pixel_data']['shape']))
+    return tuple(size_map[_] for _ in 'ZCT')
 
 
 def get_subsets(args):
