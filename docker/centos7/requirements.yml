@@ -1,12 +1,12 @@
 ---
 - src: openmicroscopy.ice
-  version: 2.0.0
+  version: 2.1.1
 
 - src: openmicroscopy.omero-python-deps
   version: 1.1.0
 
-- name: openmicroscopy.omero-common
-  src:  https://github.com/openmicroscopy/ansible-role-omero-common/archive/0.1.0.tar.gz
+- src: openmicroscopy.omero-common
+  version: 0.3.0
 
-- name: openmicroscopy.omego
-  src:  https://github.com/openmicroscopy/ansible-role-omego/archive/0.1.0.tar.gz
+- src: openmicroscopy.omego
+  version: 0.1.0
