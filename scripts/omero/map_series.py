@@ -31,6 +31,7 @@ import getpass
 from string import uppercase as LETTERS
 from operator import itemgetter
 
+import omero
 from omero.gateway import BlitzGateway
 
 DEFAULT_USER = getpass.getuser()
@@ -53,10 +54,11 @@ def main(argv):
     if not args.out_file:
         args.out_file = "map_screen_%d.tsv" % args.screen_id
     passwd = getpass.getpass()
-    conn = BlitzGateway(
-        args.user, passwd, host=args.host, port=args.port, group=args.group
-    )
-    conn.connect()
+    client = omero.client(host=args.host, port=args.port)
+    client.createSession(args.user, passwd)
+    conn = BlitzGateway(client_obj=client)
+    conn.SERVICE_OPTS.setOmeroGroup('-1')
+    conn.setSecure(True)
     screen = conn.getObject("Screen", args.screen_id)
     print "writing to %s" % args.out_file
     print "SCREEN: %s" % screen.name
