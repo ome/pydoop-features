@@ -24,7 +24,7 @@ RUN yum -y install tkinter
 
 RUN useradd -m features
 ARG OMEGO_OPTS
-RUN /opt/omero/omego/bin/omego download py --sym OMERO.py $OMEGO_OPTS
+RUN /opt/omero/omego/bin/omego download py --release 5.3 --sym OMERO.py $OMEGO_OPTS
 
 RUN printf 'PATH=$PATH:/build/OMERO.py/bin\n' > /etc/profile.d/omero.sh && \
     printf '/build/OMERO.py/lib/python\n' > /usr/lib/python2.7/site-packages/omero.pth
